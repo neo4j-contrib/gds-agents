@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "neo4j-gds": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "src/mcp_server_neo4j_gds",
+        "mcp-neo4j-gds",
+        "--db-url",
+        "neo4j+s://57327d08.databases.neo4j.io",
+        "--username",
+        "neo4j",
+        "--password",
+        "fxB0jYMU-ms37KGPXu5sh2l5IIc5Jrrn4I4wQkJts_I"
+      ]
+    }
+  }
+}
