@@ -40,22 +40,29 @@ async def main(db_url: str, username: str, password: str):
                 description="""Count the number of nodes in the graph""",
                 inputSchema={
                     "type": "object",
-                    "properties": {},
-                    "required": [],
+                    "properties": {
+                        "relationship_property": {"type": "string", "description": "Property of the relationship to use", "default": "distance"}
+                    },
+                    "required": ["relationship_property"]
                 },
             ),
             types.Tool(
-                name="run_node_similarity",
-                description="Run node similarity algorithm on the graph",
+                name="find_shortest_path",
+                description="Find the shortest path between two stations using Dijkstra's algorithm",
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "node_label": {"type": "string", "description": "Label of nodes to analyze"},
-                        "relationship_type": {"type": "string", "description": "Type of relationships to consider"},
-                        "top_k": {"type": "integer", "description": "Number of similar pairs to return per node", "default": 10}
+                        "start_station": {"type": "string", "description": "Name of the starting station"},
+                        "end_station": {"type": "string", "description": "Name of the ending station"},
+                        "relationship_property": {
+                            "type": "string", 
+                            "description": "Property of the relationship to use for path finding",
+                            "enum": ["distance", "time"],
+                            "default": "distance"
+                        }
                     },
-                    "required": ["node_label", "relationship_type"]
-                },
+                    "required": ["start_station", "end_station", "relationship_property"]
+                }
             ),
         ]
     
@@ -68,17 +75,18 @@ async def main(db_url: str, username: str, password: str):
                 return [types.TextContent(type="text", text=str(result))]
 
             elif name == "count_nodes":
-                result = gds.count_nodes(db_url, username, password)
+                result = gds.count_nodes(db_url, username, password, arguments["relationship_property"])
                 return [types.TextContent(type="text", text=str(result))]
 
-            elif name == "run_node_similarity":
-                result = gds.run_node_similarity(
+            
+            elif name == "find_shortest_path":
+                result = gds.find_shortest_path(
                     db_url,
                     username,
                     password,
-                    arguments["node_label"],
-                    arguments["relationship_type"],
-                    arguments.get("top_k", 10)
+                    arguments["start_station"],
+                    arguments["end_station"],
+                    arguments["relationship_property"]
                 )
                 return [types.TextContent(type="text", text=str(result))]
             else:
