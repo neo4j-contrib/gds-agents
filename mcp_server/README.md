@@ -1,3 +1,3 @@
 # Neo4j GDS MCP Server
 
-Run `uv sync` and run claude in the folder
+Run `uv sync` and run `claude` in the folder

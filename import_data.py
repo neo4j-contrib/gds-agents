@@ -53,6 +53,10 @@ def import_tube_data(uri, username, password, data_file):
     driver.close()
 
 # Usage
+from dotenv import load_dotenv
+import os
+load_dotenv('.env')
+
 uri = os.environ["NEO4J_URI"]
 username = os.environ["NEO4J_USERNAME"]
 password = os.environ["NEO4J_PASSWORD"]
