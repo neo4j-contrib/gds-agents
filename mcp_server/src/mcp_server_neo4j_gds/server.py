@@ -49,12 +49,23 @@ async def main(db_url: str, username: str, password: str):
                 },
             ),
             types.Tool(
+                name="get_node_properties_keys",
+                description="""Get all node properties keys in the database""",
+                inputSchema={
+                    "type": "object",
+                },
+            ),
+            types.Tool(
                 name="degree_centrality",
                 description="""Calculate degree centrality for all nodes in the graph""",
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "names": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the centrality for"},
+                        "nodes": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the centrality for"},
+                        "property_key": {
+                            "type": "string",
+                            "description": "Property key to use to filter the specified nodes."
+                        }
                     },
                     "required": [],
                 },
@@ -65,7 +76,11 @@ async def main(db_url: str, username: str, password: str):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "names": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the PageRank for."},
+                        "nodes": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the PageRank for."},
+                        "property_key": {
+                            "type": "string",
+                            "description": "Property key to use to filter the specified nodes."
+                        },
                         "dampingFactor": {"type": "number", "description": "The damping factor of the Page Rank calculation. Must be in [0, 1)."},
                         "maxIterations": {"type": "integer", "description": "Maximum number of iterations for PageRank"},
                         "tolerance": {"type": "number", "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns."}
@@ -103,8 +118,12 @@ async def main(db_url: str, username: str, password: str):
                 result = gds.count_nodes(db_url, username, password)
                 return [types.TextContent(type="text", text=str(result))]
 
+            elif name == "get_node_properties_keys":
+                result = gds.get_node_properties_keys(db_url, username, password)
+                return [types.TextContent(type="text", text=str(result))]
+
             elif name == "degree_centrality":
-                result = gds.degree_centrality(db_url, username, password, names=arguments.get("names"))
+                result = gds.degree_centrality(db_url, username, password, nodes=arguments.get("nodes"), property_key=arguments.get("property_key"))
                 return [types.TextContent(type="text", text=str(result))]
 
             elif name == "pagerank":
@@ -112,7 +131,8 @@ async def main(db_url: str, username: str, password: str):
                     db_url,
                     username,
                     password,
-                    names=arguments.get("names"),
+                    nodes=arguments.get("nodes"),
+                    property_key=arguments.get("property_key"),
                     dampingFactor=arguments.get("dampingFactor"),
                     maxIterations=arguments.get("maxIterations"),
                     tolerance=arguments.get("tolerance")
