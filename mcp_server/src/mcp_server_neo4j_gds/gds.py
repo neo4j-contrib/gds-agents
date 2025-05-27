@@ -15,35 +15,45 @@ logging.basicConfig(
 logger = logging.getLogger('mcp_server_neo4j_gds')
 
 @contextmanager
-def projected_graph(gds, relationship_property: str = "distance"):
+def projected_graph(gds):
     graph_name = f"temp_graph_{uuid.uuid4().hex[:8]}"
     try:
+        rel_properties = gds.run_cypher("MATCH (n)-[r]-(m) RETURN DISTINCT keys(properties(r))")['keys(properties(r))'][0]
+        valid_properties = {}
+        # loop over indices in rel_properties
+        for i in range(len(rel_properties)):
+            pi = gds.run_cypher(f"MATCH (n)-[r]-(m) RETURN distinct r.{rel_properties[i]} IS :: STRING AS ISSTRING")
+            # check r0 dataframe has exactly one row and that row has False
+            if pi.shape[0] == 1 and bool(pi['ISSTRING'][0]) is False:
+                # add kv to dictionary valid_properties
+                valid_properties[rel_properties[i]] = f"r.{rel_properties[i]}"
+
+        prop_map = ", ".join(f"{prop}: r.{prop}" for prop in valid_properties)
         G, _ = gds.graph.cypher.project(
-            """
-            MATCH (n)-[r]-(m)
-            WITH n, r, m
-            RETURN gds.graph.project(
-                $graph_name,
-                n,
-                m,
-                {
-                sourceNodeLabels: labels(n),
-                targetNodeLabels: labels(m),
-                relationshipType: type(r),
-                relationshipProperties: { weight: r[$relationship_property] }
-            }  
-            )
-            """,
-            graph_name=graph_name,
-            relationship_property=relationship_property
+            f"""
+                   MATCH (n)-[r]-(m)
+                   WITH n, r, m
+                   RETURN gds.graph.project(
+                       $graph_name,
+                       n,
+                       m,
+                       {{
+                       sourceNodeLabels: labels(n),
+                       targetNodeLabels: labels(m),
+                       relationshipType: type(r),
+                       relationshipProperties: {{{prop_map}}}
+                   }}
+                   )
+                   """,
+            graph_name=graph_name
         )
         yield G
     finally:
         gds.graph.drop(graph_name)
 
-def count_nodes(db_url: str, username: str, password: str, relationship_property: str):
+def count_nodes(db_url: str, username: str, password: str):
     gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-    with projected_graph(gds, relationship_property) as G:
+    with projected_graph(gds) as G:
         return G.node_count()
 
 def degree_centrality(db_url: str, username: str, password: str, **kwargs):
@@ -51,18 +61,18 @@ def degree_centrality(db_url: str, username: str, password: str, **kwargs):
     with projected_graph(gds) as G:
         centrality = gds.degree.stream(G)
 
-    stations = kwargs.get('stations', None)
-    if stations is not None:
+    names = kwargs.get('names', None)
+    if names is not None:
         query = """
-        UNWIND $stations AS station
-        MATCH (s:UndergroundStation)
-        WHERE toLower(s.name) CONTAINS toLower(station)
+        UNWIND $names AS name
+        MATCH (s)
+        WHERE toLower(s.name) CONTAINS toLower(name)
         RETURN id(s) as node_id
         """
         df = gds.run_cypher(
             query,
             params={
-                'stations': stations,
+                'names': names,
             }
         )
         node_ids = df['node_id'].tolist()
@@ -75,23 +85,23 @@ def pagerank(db_url: str, username: str, password: str, **kwargs):
     with projected_graph(gds) as G:
         # If any optional parameter is not None, use that parameter
         args = locals()
-        params = {k: v for k, v in kwargs.items() if v is not None and k not in ['stations']}
-        stations = kwargs.get('stations', None)
+        params = {k: v for k, v in kwargs.items() if v is not None and k not in ['names']}
+        names = kwargs.get('names', None)
         logger.info(f"Pagerank parameters: {params}")
         pageranks = gds.pageRank.stream(G, **params)
 
-    if stations is not None:
-        logger.info(f"Filtering pagerank results for stations: {stations}")
+    if names is not None:
+        logger.info(f"Filtering pagerank results for nodes: {names}")
         query = """
-        UNWIND $stations AS station
-        MATCH (s:UndergroundStation)
-        WHERE toLower(s.name) CONTAINS toLower(station)
+        UNWIND $names AS name
+        MATCH (s)
+        WHERE toLower(s.name) CONTAINS toLower(name)
         RETURN id(s) as node_id
         """
         df = gds.run_cypher(
             query,
             params={
-                'stations': stations,
+                'names': names,
             }
         )
         node_ids = df['node_id'].tolist()
@@ -99,13 +109,13 @@ def pagerank(db_url: str, username: str, password: str, **kwargs):
 
     return pageranks
 
-def find_shortest_path(db_url: str, username: str, password: str, start_station: str, end_station: str, relationship_property: str):
+def find_shortest_path(db_url: str, username: str, password: str, start_node: str, end_node: str, **kwargs):
     gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
     
     query = """
-    MATCH (start:UndergroundStation)
+    MATCH (start)
     WHERE toLower(start.name) CONTAINS toLower($start_name)
-    MATCH (end:UndergroundStation)
+    MATCH (end)
     WHERE toLower(end.name) CONTAINS toLower($end_name)
     RETURN id(start) as start_id, id(end) as end_id
     """
@@ -113,27 +123,31 @@ def find_shortest_path(db_url: str, username: str, password: str, start_station:
     df = gds.run_cypher(
         query,
         params={
-            'start_name': start_station,
-            'end_name': end_station
+            'start_name': start_node,
+            'end_name': end_node
         }
     )
     
     if df.empty:
         return {
             "found": False,
-            "message": "One or both station names not found"
+            "message": "One or both node names not found"
         }
     
     start_node_id = int(df['start_id'].iloc[0])
     end_node_id = int(df['end_id'].iloc[0])
 
     with projected_graph(gds) as G:
+        # If any optional parameter is not None, use that parameter
+        args = locals()
+        params = {k: v for k, v in kwargs.items() if v is not None}
+        logger.info(f"Dijkstra single-source shortest path parameters: {params}")
+
         path_data = gds.shortestPath.dijkstra.stream(
             G,
             sourceNode=start_node_id,
             targetNode=end_node_id,
-            relationshipTypes=["LINK"],
-            relationshipWeightProperty="weight"
+            **params
         )
     
         if path_data.empty:
@@ -152,13 +166,13 @@ def find_shortest_path(db_url: str, username: str, password: str, start_station:
         if hasattr(costs, 'tolist'):
             costs = costs.tolist()
 
-        # Get station names using GDS utility function
-        station_names = [gds.util.asNode(node_id) for node_id in node_ids]
+        # Get node names using GDS utility function
+        node_names = [gds.util.asNode(node_id) for node_id in node_ids]
             
         return {
             "totalCost": float(path_data['totalCost'].iloc[0]),
             "nodeIds": node_ids,
-            "stationNames": station_names,
+            "nodeNames": node_names,
             "path": path_data['path'].iloc[0],
             "costs": costs
         }

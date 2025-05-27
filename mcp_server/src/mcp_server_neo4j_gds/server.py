@@ -46,10 +46,6 @@ async def main(db_url: str, username: str, password: str):
                 description="""Count the number of nodes in the graph""",
                 inputSchema={
                     "type": "object",
-                    "properties": {
-                        "relationship_property": {"type": "string", "description": "Property of the relationship to use", "default": "distance"}
-                    },
-                    "required": ["relationship_property"]
                 },
             ),
             types.Tool(
@@ -58,7 +54,7 @@ async def main(db_url: str, username: str, password: str):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "stations": {"type": "array", "items": {"type": "string"}, "description": "List of stations to return the centrality for"},
+                        "names": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the centrality for"},
                     },
                     "required": [],
                 },
@@ -69,7 +65,7 @@ async def main(db_url: str, username: str, password: str):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "stations": {"type": "array", "items": {"type": "string"}, "description": "List of stations to return the PageRank for."},
+                        "names": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the PageRank for."},
                         "dampingFactor": {"type": "number", "description": "The damping factor of the Page Rank calculation. Must be in [0, 1)."},
                         "maxIterations": {"type": "integer", "description": "Maximum number of iterations for PageRank"},
                         "tolerance": {"type": "number", "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns."}
@@ -79,20 +75,18 @@ async def main(db_url: str, username: str, password: str):
             ),
             types.Tool(
                 name="find_shortest_path",
-                description="Find the shortest path between two stations using Dijkstra's algorithm",
+                description="Find the shortest path between two nodes using Dijkstra's algorithm",
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "start_station": {"type": "string", "description": "Name of the starting station"},
-                        "end_station": {"type": "string", "description": "Name of the ending station"},
+                        "start_node": {"type": "string", "description": "Name of the starting node"},
+                        "end_node": {"type": "string", "description": "Name of the ending node"},
                         "relationship_property": {
                             "type": "string", 
-                            "description": "Property of the relationship to use for path finding",
-                            "enum": ["distance", "time"],
-                            "default": "distance"
+                            "description": "Property of the relationship to use for path finding"
                         }
                     },
-                    "required": ["start_station", "end_station", "relationship_property"]
+                    "required": ["start_node", "end_node"]
                 }
             ),
         ]
@@ -106,22 +100,19 @@ async def main(db_url: str, username: str, password: str):
                 return [types.TextContent(type="text", text=str(result))]
 
             elif name == "count_nodes":
-                result = gds.count_nodes(db_url, username, password, arguments["relationship_property"])
+                result = gds.count_nodes(db_url, username, password)
                 return [types.TextContent(type="text", text=str(result))]
 
             elif name == "degree_centrality":
-                result = gds.degree_centrality(db_url, username, password, arguments.get("stations"))
+                result = gds.degree_centrality(db_url, username, password, names=arguments.get("names"))
                 return [types.TextContent(type="text", text=str(result))]
 
             elif name == "pagerank":
-                # I want to optionally get the arguments["stations"] and pass them to the gds.pagerank function
-                # if they are not None
-                # and also pass the other arguments
                 result = gds.pagerank(
                     db_url,
                     username,
                     password,
-                    stations=arguments.get("stations"),
+                    names=arguments.get("names"),
                     dampingFactor=arguments.get("dampingFactor"),
                     maxIterations=arguments.get("maxIterations"),
                     tolerance=arguments.get("tolerance")
@@ -133,9 +124,9 @@ async def main(db_url: str, username: str, password: str):
                     db_url,
                     username,
                     password,
-                    arguments["start_station"],
-                    arguments["end_station"],
-                    arguments["relationship_property"]
+                    arguments.get("start_node"),
+                    arguments.get("end_node"),
+                    relationshipWeightProperty=arguments.get("relationship_property")
                 )
                 return [types.TextContent(type="text", text=str(result))]
             else:
@@ -156,4 +147,5 @@ async def main(db_url: str, username: str, password: str):
                         experimental_capabilities={},
                     ),
                 ),
+                raise_exceptions=True,
             )
