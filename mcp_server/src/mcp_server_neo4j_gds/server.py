@@ -6,6 +6,9 @@ import mcp.types as types
 from typing import Any
 import mcp.server.stdio
 from . import gds
+from .centrality_algorithm_specs import centrality_tool_definitions
+from .path_algorithm_specs import path_tool_definitions
+from .registry import AlgorithmRegistry
 
 logger = logging.getLogger('mcp_server_neo4j_gds')
 logging.basicConfig(
@@ -55,56 +58,7 @@ async def main(db_url: str, username: str, password: str):
                     "type": "object",
                 },
             ),
-            types.Tool(
-                name="degree_centrality",
-                description="""Calculate degree centrality for all nodes in the graph""",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "nodes": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the centrality for"},
-                        "property_key": {
-                            "type": "string",
-                            "description": "Property key to use to filter the specified nodes."
-                        }
-                    },
-                    "required": [],
-                },
-            ),
-            types.Tool(
-                name="pagerank",
-                description="""Calculate PageRank for all nodes in the graph""",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "nodes": {"type": "array", "items": {"type": "string"}, "description": "List of nodes to return the PageRank for."},
-                        "property_key": {
-                            "type": "string",
-                            "description": "Property key to use to filter the specified nodes."
-                        },
-                        "dampingFactor": {"type": "number", "description": "The damping factor of the Page Rank calculation. Must be in [0, 1)."},
-                        "maxIterations": {"type": "integer", "description": "Maximum number of iterations for PageRank"},
-                        "tolerance": {"type": "number", "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns."}
-                    },
-                    "required": [],
-                },
-            ),
-            types.Tool(
-                name="find_shortest_path",
-                description="Find the shortest path between two nodes using Dijkstra's algorithm",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "start_node": {"type": "string", "description": "Name of the starting node"},
-                        "end_node": {"type": "string", "description": "Name of the ending node"},
-                        "relationship_property": {
-                            "type": "string", 
-                            "description": "Property of the relationship to use for path finding"
-                        }
-                    },
-                    "required": ["start_node", "end_node"]
-                }
-            ),
-        ]
+        ] + centrality_tool_definitions + path_tool_definitions
     
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
@@ -122,35 +76,10 @@ async def main(db_url: str, username: str, password: str):
                 result = gds.get_node_properties_keys(db_url, username, password)
                 return [types.TextContent(type="text", text=str(result))]
 
-            elif name == "degree_centrality":
-                result = gds.degree_centrality(db_url, username, password, nodes=arguments.get("nodes"), property_key=arguments.get("property_key"))
-                return [types.TextContent(type="text", text=str(result))]
-
-            elif name == "pagerank":
-                result = gds.pagerank(
-                    db_url,
-                    username,
-                    password,
-                    nodes=arguments.get("nodes"),
-                    property_key=arguments.get("property_key"),
-                    dampingFactor=arguments.get("dampingFactor"),
-                    maxIterations=arguments.get("maxIterations"),
-                    tolerance=arguments.get("tolerance")
-                )
-                return [types.TextContent(type="text", text=str(result))]
-            
-            elif name == "find_shortest_path":
-                result = gds.find_shortest_path(
-                    db_url,
-                    username,
-                    password,
-                    arguments.get("start_node"),
-                    arguments.get("end_node"),
-                    relationshipWeightProperty=arguments.get("relationship_property")
-                )
-                return [types.TextContent(type="text", text=str(result))]
             else:
-                raise ValueError(f"Unknown tool: {name}")
+                handler = AlgorithmRegistry.get_handler(name, db_url, username, password)
+                result = handler.execute(arguments or {})
+                return [types.TextContent(type="text", text=str(result))]
 
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error: {str(e)}")]

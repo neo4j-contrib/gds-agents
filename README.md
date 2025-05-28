@@ -27,3 +27,7 @@ Once the server is running, you are able to **ask any graph questions about your
 Connect to your DB and querying the graph from [Neo4j workspace](https://workspace-preview.neo4j.io/workspace/), 
 you should see:
 ![London Underground Graph](dataset/london-underground-graph.png)
+
+
+# Start the server
+Run `uv sync` and run `claude` from command line when inside the `mcp_server`.
