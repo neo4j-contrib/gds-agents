@@ -31,3 +31,73 @@ you should see:
 
 # Start the server
 Run `uv sync` and run `claude` from command line when inside the `mcp_server`.
+
+# Example usage
+An example usage where we can ask Claude (that have access to the gds-agent MCP server) questions regarding my graph.
+It finds and executes the algorithms with appropriate parameters. Intermediate outputs are also shown.
+
+```
+> My database contains a graph about the London underground. I have some questions about my data. Use the available tools. If you cannot decide which tool to use, ask for confirmation.
+
+⏺ I can help you analyze your London underground graph data! I have access to several Neo4j GDS tools for graph analysis including:
+
+  - Node operations: Count nodes, get node properties
+  - Centrality algorithms: PageRank, degree centrality, betweenness centrality, closeness centrality, eigenvector centrality, harmonic centrality, ArticleRank, HITS
+  - Path algorithms: Find shortest paths between nodes
+  - Graph structure: Find articulation points, bridges
+  - Influence maximization: CELF algorithm
+
+  What specific questions do you have about your London underground data? For example:
+  - Which stations are most central/important?
+  - What are the shortest paths between stations?
+  - Which stations are critical connection points?
+  - How many nodes/stations are in your graph?
+
+  Let me know what you'd like to explore and I'll use the appropriate tools to analyze your data.
+
+> How can I go from Embankment to Paddington quickly?
+
+⏺ neo4j-gds:find_shortest_path (MCP)(start_node: "Embankment", end_node: "Paddington")…
+  ⎿ {'totalCost': 6.0, 'nodeIds': [71, 251, 89, 25, 9, 68, 167], 'nodeNames': [<Node element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:71' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5074, 'rail': 0, 'name': 'Embankment', 'total_lines': 4, 'id': '87',
+    'display_name': 'Embankment', 'longitude': -0.1223}>, <Node element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:251' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.501, 'rail': 0, 'name': 'Westminster', 'total_lines': 3, 'id': '285', 'display_name': 'Westminster',
+    'longitude': -0.1254}>, <Node element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:89' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5067, 'rail': 0, 'name': 'Green Park', 'total_lines': 3, 'id': '107', 'display_name': 'Green<br />Park', 'longitude': -0.1428}>, <Node
+     element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:25' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5142, 'rail': 0, 'name': 'Bond Street', 'total_lines': 2, 'id': '28', 'display_name': 'Bond<br />Street', 'longitude': -0.1494}>, <Node
+    element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:9' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5226, 'rail': 0, 'name': 'Baker Street', 'total_lines': 5, 'id': '11', 'display_name': 'Baker<br />Street', 'longitude': -0.1571}>, <Node
+    element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:68' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5203, 'rail': 0, 'name': 'Edgware Road (C)', 'total_lines': 3, 'id': '83', 'display_name': 'Edgware<br />Road', 'longitude': -0.17}>, <Node
+    element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:167' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5154, 'rail': 1, 'name': 'Paddington', 'total_lines': 4, 'id': '193', 'display_name': 'Paddington', 'longitude': -0.1755}>], 'path': <Path start=<Node
+    element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:71' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5074, 'rail': 0, 'name': 'Embankment', 'total_lines': 4, 'id': '87', 'display_name': 'Embankment', 'longitude': -0.1223}> end=<Node
+    element_id='4:4da44164-1c21-4122-8b25-791a7359cb53:167' labels=frozenset({'UndergroundStation'}) properties={'zone': 1, 'latitude': 51.5154, 'rail': 1, 'name': 'Paddington', 'total_lines': 4, 'id': '193', 'display_name': 'Paddington', 'longitude': -0.1755}> size=6>, 'costs': [0.0, 1.0, 2.0, 3.0,
+    4.0, 5.0, 6.0]}
+
+⏺ The quickest route from Embankment to Paddington takes 6 stops:
+
+  Embankment → Westminster → Green Park → Bond Street → Baker Street → Edgware Road → Paddington
+
+  Total cost: 6 stops
+
+> How central is Piccadilly Circus in the London underground network?
+
+⏺ neo4j-gds:degree_centrality (MCP)(nodes: ["Piccadilly Circus"])…
+
+⏺ neo4j-gds:betweenness_centrality (MCP)(nodes: ["Piccadilly Circus"])…
+
+⏺ neo4j-gds:closeness_centrality (MCP)(nodes: ["Piccadilly Circus"])…
+
+⏺ neo4j-gds:pagerank (MCP)(nodes: ["Piccadilly Circus"])…
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Tool use                                                                                                                                                                                                                                                                                                        │
+│                                                                                                                                                                                                                                                                                                                 │
+│   neo4j-gds:degree_centrality(nodes: ["Piccadilly Circus"]) (MCP)                                                                                                                                                                                                                                               │
+│   Calculate degree centrality for all nodes in the graph                                                                                                                                                                                                                                                        │
+│                                                                                                                                                                                                                                                                                                                 │
+│ Do you want to proceed?                                                                                                                                                                                                                                                                                         │
+│ ❯ 1. Yes                                                                                                                                                                                                                                                                                                        │
+│   2. Yes, and don't ask again for neo4j-gds:degree_centrality commands in /Users/sbr/gds-agents/mcp_server                                                                                                                                                                                                      │
+│   3. No, and tell Claude what to do differently (esc)                                                                                                                                                                                                                                                           │
+│                                                                                                                                                                                                                                                                                                                 │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+...
+
+```
