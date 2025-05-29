@@ -3,8 +3,8 @@ from typing import Dict, Any
 
 from graphdatascience import GraphDataScience
 
-from mcp_server.src.mcp_server_neo4j_gds.algorithm_handler import AlgorithmHandler
-from mcp_server.src.mcp_server_neo4j_gds.gds import projected_graph
+from .algorithm_handler import AlgorithmHandler
+from .gds import projected_graph
 
 logging.basicConfig(
     level=logging.INFO,

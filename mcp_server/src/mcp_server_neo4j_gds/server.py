@@ -7,6 +7,7 @@ from typing import Any
 import mcp.server.stdio
 from . import gds
 from .centrality_algorithm_specs import centrality_tool_definitions
+from .community_algorithm_specs import community_tool_definitions
 from .path_algorithm_specs import path_tool_definitions
 from .registry import AlgorithmRegistry
 
@@ -42,7 +43,7 @@ async def main(db_url: str, username: str, password: str):
                     "type": "object",
                 },
             ),
-        ] + centrality_tool_definitions + path_tool_definitions
+        ] + centrality_tool_definitions + community_tool_definitions + path_tool_definitions
     
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:

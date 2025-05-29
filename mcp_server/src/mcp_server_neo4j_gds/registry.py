@@ -4,7 +4,10 @@ from .algorithm_handler import AlgorithmHandler
 from .centrality_algorithm_handlers import PageRankHandler, ArticleRankHandler, \
     DegreeCentralityHandler, ArticulationPointsHandler, BetweennessCentralityHandler, BridgesHandler, CELFHandler, \
     ClosenessCentralityHandler, EigenvectorCentralityHandler, HarmonicCentralityHandler, HITSHandler
-from .community_algorithm_handlers import ConductanceHandler, HDBSCANHandler, KCoreDecompositionHandler, K1ColoringHandler, KMeansClusteringHandler, LabelPropagationHandler, LeidenHandler, LocalClusteringCoefficientHandler, LouvainHandler, ModularityMetricHandler, ModularityOptimizationHandler, StronglyConnectedComponentsHandler, TriangleCountHandler, WeaklyConnectedComponentsHandler, ApproximateMaximumKCutHandler, SpeakerListenerLabelPropagationHandler
+from .community_algorithm_handlers import ConductanceHandler, HDBSCANHandler, KCoreDecompositionHandler, K1ColoringHandler, \
+    KMeansClusteringHandler, LabelPropagationHandler, LeidenHandler, LocalClusteringCoefficientHandler, LouvainHandler, \
+    ModularityMetricHandler, ModularityOptimizationHandler, StronglyConnectedComponentsHandler, TriangleCountHandler, \
+    WeaklyConnectedComponentsHandler, ApproximateMaximumKCutHandler, SpeakerListenerLabelPropagationHandler
 from .path_algorithm_handlers import DijkstraShortestPathHandler
 
 
@@ -23,7 +26,7 @@ class AlgorithmRegistry:
         "harmonic_centrality": HarmonicCentralityHandler,
         "HITS": HITSHandler,
 
-        # Community detection algorithms
+        # # Community detection algorithms
         "conductance": ConductanceHandler,
         "hdbscan": HDBSCANHandler,
         "k_core_decomposition": KCoreDecompositionHandler,
@@ -40,7 +43,7 @@ class AlgorithmRegistry:
         "weakly_connected_components": WeaklyConnectedComponentsHandler,
         "approximate_maximum_k_cut": ApproximateMaximumKCutHandler,
         "speaker_listener_label_propagation": SpeakerListenerLabelPropagationHandler,
-        
+
         # Path finding algorithms
         "find_shortest_path": DijkstraShortestPathHandler,
     }
