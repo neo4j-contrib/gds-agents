@@ -20,10 +20,6 @@ logging.basicConfig(
     ]
 )
 
-def add(a: int, b: int) -> int:
-    return a + b
-
-
 async def main(db_url: str, username: str, password: str):
     logger.info(f"Starting MCP Server for {db_url} with username {username}")
     server = Server("example-server")
@@ -32,18 +28,6 @@ async def main(db_url: str, username: str, password: str):
     async def handle_list_tools() -> list[types.Tool]:
         """List available tools"""
         return [
-            types.Tool(
-                name="add",
-                description="""Add two numbers""",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "a": {"type": "integer", "description": "First number to add"},
-                        "b": {"type": "integer", "description": "Second number to add"}
-                    },
-                    "required": ["a", "b"],
-                },
-            ),
             types.Tool(
                 name="count_nodes",
                 description="""Count the number of nodes in the graph""",
@@ -64,11 +48,7 @@ async def main(db_url: str, username: str, password: str):
     async def handle_call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle tool execution requests"""
         try:
-            if name == "add":
-                result = add(arguments["a"], arguments["b"])
-                return [types.TextContent(type="text", text=str(result))]
-
-            elif name == "count_nodes":
+            if name == "count_nodes":
                 result = gds.count_nodes(db_url, username, password)
                 return [types.TextContent(type="text", text=str(result))]
 
