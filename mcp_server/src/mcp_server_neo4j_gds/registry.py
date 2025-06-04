@@ -8,6 +8,7 @@ from .community_algorithm_handlers import ConductanceHandler, HDBSCANHandler, KC
     KMeansClusteringHandler, LabelPropagationHandler, LeidenHandler, LocalClusteringCoefficientHandler, LouvainHandler, \
     ModularityMetricHandler, ModularityOptimizationHandler, StronglyConnectedComponentsHandler, TriangleCountHandler, \
     WeaklyConnectedComponentsHandler, ApproximateMaximumKCutHandler, SpeakerListenerLabelPropagationHandler
+from .similarity_algorithm_handlers import NodeSimilarityHandler, FilteredNodeSimilarityHandler, KNearestNeighborsHandler, FilteredKNearestNeighborsHandler
 from .path_algorithm_handlers import DijkstraShortestPathHandler
 
 
@@ -26,7 +27,7 @@ class AlgorithmRegistry:
         "harmonic_centrality": HarmonicCentralityHandler,
         "HITS": HITSHandler,
 
-        # # Community detection algorithms
+        # Community detection algorithms
         "conductance": ConductanceHandler,
         "hdbscan": HDBSCANHandler,
         "k_core_decomposition": KCoreDecompositionHandler,
@@ -43,6 +44,12 @@ class AlgorithmRegistry:
         "weakly_connected_components": WeaklyConnectedComponentsHandler,
         "approximate_maximum_k_cut": ApproximateMaximumKCutHandler,
         "speaker_listener_label_propagation": SpeakerListenerLabelPropagationHandler,
+
+        # Similarity algorithms
+        "node_similarity": NodeSimilarityHandler,
+        "filtered_node_similarity": FilteredNodeSimilarityHandler,
+        "k_nearest_neighbors": KNearestNeighborsHandler,
+        "filtered_k_nearest_neighbors": FilteredKNearestNeighborsHandler,
 
         # Path finding algorithms
         "find_shortest_path": DijkstraShortestPathHandler,
