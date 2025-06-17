@@ -9,7 +9,7 @@ from .community_algorithm_handlers import ConductanceHandler, HDBSCANHandler, KC
     ModularityMetricHandler, ModularityOptimizationHandler, StronglyConnectedComponentsHandler, TriangleCountHandler, \
     WeaklyConnectedComponentsHandler, ApproximateMaximumKCutHandler, SpeakerListenerLabelPropagationHandler
 from .similarity_algorithm_handlers import NodeSimilarityHandler, FilteredNodeSimilarityHandler, KNearestNeighborsHandler, FilteredKNearestNeighborsHandler
-from .path_algorithm_handlers import DijkstraShortestPathHandler
+from .path_algorithm_handlers import DijkstraShortestPathHandler, DeltaSteppingShortestPathHandler, DijkstraSingleSourceShortestPathHandler, AStarShortestPathHandler, YensShortestPathsHandler
 
 
 class AlgorithmRegistry:
@@ -53,6 +53,10 @@ class AlgorithmRegistry:
 
         # Path finding algorithms
         "find_shortest_path": DijkstraShortestPathHandler,
+        "delta_stepping_shortest_path": DeltaSteppingShortestPathHandler,
+        "dijkstra_single_source_shortest_path": DijkstraSingleSourceShortestPathHandler,
+        "a_star_shortest_path": AStarShortestPathHandler,
+        "yens_shortest_paths": YensShortestPathsHandler,
     }
 
     @classmethod
