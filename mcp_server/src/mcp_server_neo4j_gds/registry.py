@@ -9,7 +9,7 @@ from .community_algorithm_handlers import ConductanceHandler, HDBSCANHandler, KC
     ModularityMetricHandler, ModularityOptimizationHandler, StronglyConnectedComponentsHandler, TriangleCountHandler, \
     WeaklyConnectedComponentsHandler, ApproximateMaximumKCutHandler, SpeakerListenerLabelPropagationHandler
 from .similarity_algorithm_handlers import NodeSimilarityHandler, FilteredNodeSimilarityHandler, KNearestNeighborsHandler, FilteredKNearestNeighborsHandler
-from .path_algorithm_handlers import DijkstraShortestPathHandler, DeltaSteppingShortestPathHandler, DijkstraSingleSourceShortestPathHandler, AStarShortestPathHandler, YensShortestPathsHandler
+from .path_algorithm_handlers import DijkstraShortestPathHandler, DeltaSteppingShortestPathHandler, DijkstraSingleSourceShortestPathHandler, AStarShortestPathHandler, YensShortestPathsHandler, MinimumWeightSpanningTreeHandler, MinimumWeightKSpanningTreeHandler, MinimumDirectedSteinerTreeHandler, PrizeCollectingSteinerTreeHandler, AllPairsShortestPathsHandler, RandomWalkHandler, BreadthFirstSearchHandler, DepthFirstSearchHandler, BellmanFordSingleSourceShortestPathHandler, LongestPathHandler
 
 
 class AlgorithmRegistry:
@@ -57,6 +57,16 @@ class AlgorithmRegistry:
         "dijkstra_single_source_shortest_path": DijkstraSingleSourceShortestPathHandler,
         "a_star_shortest_path": AStarShortestPathHandler,
         "yens_shortest_paths": YensShortestPathsHandler,
+        "minimum_weight_spanning_tree": MinimumWeightSpanningTreeHandler,
+        "minimum_weight_k_spanning_tree": MinimumWeightKSpanningTreeHandler,
+        "minimum_directed_steiner_tree": MinimumDirectedSteinerTreeHandler,
+        "prize_collecting_steiner_tree": PrizeCollectingSteinerTreeHandler,
+        "all_pairs_shortest_paths": AllPairsShortestPathsHandler,
+        "random_walk": RandomWalkHandler,
+        "breadth_first_search": BreadthFirstSearchHandler,
+        "depth_first_search": DepthFirstSearchHandler,
+        "bellman_ford_single_source_shortest_path": BellmanFordSingleSourceShortestPathHandler,
+        "longest_path": LongestPathHandler,
     }
 
     @classmethod
