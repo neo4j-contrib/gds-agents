@@ -5,6 +5,8 @@ from mcp.server.models import InitializationOptions
 import mcp.types as types
 from typing import Any
 import mcp.server.stdio
+import pandas as pd
+import json
 from . import gds
 from .centrality_algorithm_specs import centrality_tool_definitions
 from .community_algorithm_specs import community_tool_definitions
@@ -20,6 +22,22 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+def serialize_result(result: Any) -> str:
+    """Serialize results to string without truncation, handling DataFrames specially"""
+    if isinstance(result, pd.DataFrame):
+        # Configure pandas to show all rows and columns
+        with pd.option_context('display.max_rows', None, 
+                              'display.max_columns', None,
+                              'display.width', None,
+                              'display.max_colwidth', None):
+            return result.to_string(index=True)
+    elif isinstance(result, (list, dict)):
+        # Use JSON for better formatting of complex data structures
+        return json.dumps(result, indent=2, default=str)
+    else:
+        # For other types, use string conversion
+        return str(result)
 
 async def main(db_url: str, username: str, password: str):
     logger.info(f"Starting MCP Server for {db_url} with username {username}")
@@ -51,16 +69,16 @@ async def main(db_url: str, username: str, password: str):
         try:
             if name == "count_nodes":
                 result = gds.count_nodes(db_url, username, password)
-                return [types.TextContent(type="text", text=str(result))]
+                return [types.TextContent(type="text", text=serialize_result(result))]
 
             elif name == "get_node_properties_keys":
                 result = gds.get_node_properties_keys(db_url, username, password)
-                return [types.TextContent(type="text", text=str(result))]
+                return [types.TextContent(type="text", text=serialize_result(result))]
 
             else:
                 handler = AlgorithmRegistry.get_handler(name, db_url, username, password)
                 result = handler.execute(arguments or {})
-                return [types.TextContent(type="text", text=str(result))]
+                return [types.TextContent(type="text", text=serialize_result(result))]
 
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error: {str(e)}")]
