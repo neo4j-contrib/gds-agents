@@ -69,15 +69,15 @@ async def main(db_url: str, username: str, password: str):
         """Handle tool execution requests"""
         try:
             if name == "count_nodes":
-                result = gds.count_nodes(db_url, username, password)
+                result = gds.count_nodes(gds)
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
             elif name == "get_node_properties_keys":
-                result = gds.get_node_properties_keys(db_url, username, password)
+                result = gds.get_node_properties_keys(gds)
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
             else:
-                handler = AlgorithmRegistry.get_handler(name, db_url, username, password)
+                handler = AlgorithmRegistry.get_handler(name, gds)
                 result = handler.execute(arguments or {})
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
