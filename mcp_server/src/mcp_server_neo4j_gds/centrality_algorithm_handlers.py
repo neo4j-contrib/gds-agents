@@ -17,15 +17,14 @@ logging.basicConfig(
 logger = logging.getLogger('mcp_server_neo4j_gds')
 
 class ArticleRankHandler(AlgorithmHandler):
-    def article_rank(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def article_rank(self, **kwargs):
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             names = kwargs.get('nodes', None)
             logger.info(f"ArticleRank parameters: {params}")
-            article_ranks = gds.articleRank.stream(G, **params)
+            article_ranks = self.gds.articleRank.stream(G, **params)
 
         if names is not None:
             logger.info(f"Filtering ArticleRank results for nodes: {names}")
@@ -39,7 +38,7 @@ class ArticleRankHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -52,9 +51,6 @@ class ArticleRankHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.article_rank(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key"),
             sourceNodes=arguments.get("sourceNodes"),
@@ -65,30 +61,24 @@ class ArticleRankHandler(AlgorithmHandler):
         )
     
 class ArticulationPointsHandler(AlgorithmHandler):
-    def articulation_points(self, db_url: str, username: str, password: str):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            articulation_points = gds.articulationPoints.stream(G)
+    def articulation_points(self):
+        with projected_graph(self.gds) as G:
+            articulation_points = self.gds.articulationPoints.stream(G)
 
         return articulation_points
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.articulation_points(
-            self.db_url,
-            self.username,
-            self.password
-        )
+        return self.articulation_points()
 
 
 class BetweennessCentralityHandler(AlgorithmHandler):
-    def betweenness_centrality(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def betweenness_centrality(self, **kwargs):
+        with projected_graph(self.gds) as G:
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             names = kwargs.get('nodes', None)
             logger.info(f"Betweenness centrality parameters: {params}")
-            centrality = gds.betweenness.stream(G, **params)
+            centrality = self.gds.betweenness.stream(G, **params)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -103,7 +93,7 @@ class BetweennessCentralityHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -116,44 +106,32 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.betweenness_centrality(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key")
         )
 
 
 class BridgesHandler(AlgorithmHandler):
-    def bridges(self, db_url: str, username: str, password: str):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            bridges_result = gds.bridges.stream(G)
+    def bridges(self):
+        with projected_graph(self.gds) as G:
+            bridges_result = self.gds.bridges.stream(G)
         return bridges_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.bridges(
-            self.db_url,
-            self.username,
-            self.password
-        )
+        return self.bridges()
 
 
 class CELFHandler(AlgorithmHandler):
-    def celf(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def celf(self, **kwargs):
+        with projected_graph(self.gds) as G:
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"CELF parameters: {params}")
-            result = gds.influenceMaximization.celf.stream(G, **params)
+            result = self.gds.influenceMaximization.celf.stream(G, **params)
 
         return result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.celf(
-            self.db_url,
-            self.username,
-            self.password,
             seedSetSize=arguments.get("seedSetSize"),
             monteCarloSimulations=arguments.get("monteCarloSimulations"),
             propagationProbability=arguments.get("propagationProbability")
@@ -161,12 +139,11 @@ class CELFHandler(AlgorithmHandler):
 
 
 class ClosenessCentralityHandler(AlgorithmHandler):
-    def closeness_centrality(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def closeness_centrality(self, **kwargs):
+        with projected_graph(self.gds) as G:
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             logger.info(f"Closeness centrality parameters: {params}")
-            centrality = gds.closeness.stream(G, **params)
+            centrality = self.gds.closeness.stream(G, **params)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -181,7 +158,7 @@ class ClosenessCentralityHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -194,18 +171,14 @@ class ClosenessCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.closeness_centrality(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key")
         )
 
 class DegreeCentralityHandler(AlgorithmHandler):
-    def degree_centrality(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            centrality = gds.degree.stream(G)
+    def degree_centrality(self, **kwargs):
+        with projected_graph(self.gds) as G:
+            centrality = self.gds.degree.stream(G)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -220,7 +193,7 @@ class DegreeCentralityHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -233,21 +206,17 @@ class DegreeCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.degree_centrality(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key")
         )
 
 
 class EigenvectorCentralityHandler(AlgorithmHandler):
-    def eigenvector_centrality(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def eigenvector_centrality(self, **kwargs):
+        with projected_graph(self.gds) as G:
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             logger.info(f"Eigenvector centrality parameters: {params}")
-            centrality = gds.eigenvector.stream(G, **params)
+            centrality = self.gds.eigenvector.stream(G, **params)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -262,7 +231,7 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -275,9 +244,6 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.eigenvector_centrality(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key"),
             maxIterations=arguments.get("maxIterations"),
@@ -289,15 +255,14 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
 
 
 class PageRankHandler(AlgorithmHandler):
-    def pagerank(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def pagerank(self, **kwargs):
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             names = kwargs.get('nodes', None)
             logger.info(f"Pagerank parameters: {params}")
-            pageranks = gds.pageRank.stream(G, **params)
+            pageranks = self.gds.pageRank.stream(G, **params)
 
         if names is not None:
             logger.info(f"Filtering pagerank results for nodes: {names}")
@@ -311,7 +276,7 @@ class PageRankHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -324,9 +289,6 @@ class PageRankHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.pagerank(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key"),
             dampingFactor=arguments.get("dampingFactor"),
@@ -336,10 +298,9 @@ class PageRankHandler(AlgorithmHandler):
 
 
 class HarmonicCentralityHandler(AlgorithmHandler):
-    def harmonic_centrality(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            centrality = gds.harmonic.stream(G)
+    def harmonic_centrality(self, **kwargs):
+        with projected_graph(self.gds) as G:
+            centrality = self.gds.harmonic.stream(G)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -354,7 +315,7 @@ class HarmonicCentralityHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -367,21 +328,17 @@ class HarmonicCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.harmonic_centrality(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key")
         )
 
 
 class HITSHandler(AlgorithmHandler):
-    def hits(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+    def hits(self, **kwargs):
+        with projected_graph(self.gds) as G:
             params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
             logger.info(f"HITS parameters: {params}")
-            result = gds.hits.stream(G, **params)
+            result = self.gds.hits.stream(G, **params)
 
         names = kwargs.get('nodes', None)
         if names is not None:
@@ -396,7 +353,7 @@ class HITSHandler(AlgorithmHandler):
             WHERE toLower(s.{property_key}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
-            df = gds.run_cypher(
+            df = self.gds.run_cypher(
                 query,
                 params={
                     'names': names,
@@ -409,9 +366,6 @@ class HITSHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.hits(
-            self.db_url,
-            self.username,
-            self.password,
             nodes=arguments.get("nodes"),
             property_key=arguments.get("property_key"),
             hitsIterations=arguments.get("hitsIterations"),

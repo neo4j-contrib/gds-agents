@@ -1,5 +1,5 @@
 from typing import Dict, Type
-
+from graphdatascience import GraphDataScience
 from .algorithm_handler import AlgorithmHandler
 from .centrality_algorithm_handlers import PageRankHandler, ArticleRankHandler, \
     DegreeCentralityHandler, ArticulationPointsHandler, BetweennessCentralityHandler, BridgesHandler, CELFHandler, \
@@ -70,8 +70,8 @@ class AlgorithmRegistry:
     }
 
     @classmethod
-    def get_handler(cls, name: str, db_url: str, username: str, password: str) -> AlgorithmHandler:
+    def get_handler(cls, name: str, gds: GraphDataScience) -> AlgorithmHandler:
         handler_class = cls._handlers.get(name)
         if handler_class is None:
             raise ValueError(f"Unknown tool: {name}.")
-        return handler_class(db_url, username, password)
+        return handler_class(gds)

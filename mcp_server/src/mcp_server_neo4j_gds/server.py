@@ -7,7 +7,7 @@ from typing import Any
 import mcp.server.stdio
 import pandas as pd
 import json
-from . import gds
+from graphdatascience import GraphDataScience
 from .centrality_algorithm_specs import centrality_tool_definitions
 from .community_algorithm_specs import community_tool_definitions
 from .path_algorithm_specs import path_tool_definitions
@@ -42,6 +42,7 @@ def serialize_result(result: Any) -> str:
 async def main(db_url: str, username: str, password: str):
     logger.info(f"Starting MCP Server for {db_url} with username {username}")
     server = Server("example-server")
+    gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
@@ -83,17 +84,21 @@ async def main(db_url: str, username: str, password: str):
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
-    async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-            await server.run(
-                read_stream,
-                write_stream,
-                InitializationOptions(
-                    server_name="neo4j_gds",
-                    server_version="0.1.0",
-                    capabilities=server.get_capabilities(
-                        notification_options=NotificationOptions(),
-                        experimental_capabilities={},
+    try:
+        async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+                await server.run(
+                    read_stream,
+                    write_stream,
+                    InitializationOptions(
+                        server_name="neo4j_gds",
+                        server_version="0.1.0",
+                        capabilities=server.get_capabilities(
+                            notification_options=NotificationOptions(),
+                            experimental_capabilities={},
+                        ),
                     ),
-                ),
-                raise_exceptions=True,
-            )
+                        raise_exceptions=True,
+                    )
+    finally:
+        logger.info("Closing GDS connection as MCP server is shutting down.")
+        gds.close()

@@ -17,9 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger('mcp_server_neo4j_gds')
 
 class DijkstraShortestPathHandler(AlgorithmHandler):
-    def find_shortest_path(self, db_url: str, username: str, password: str, start_node: str, end_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def find_shortest_path(self, start_node: str, end_node: str, **kwargs):
         query = """
         MATCH (start)
         WHERE toLower(start.name) CONTAINS toLower($start_name)
@@ -28,7 +26,7 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
         RETURN id(start) as start_id, id(end) as end_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'start_name': start_node,
@@ -45,13 +43,13 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
         start_node_id = int(df['start_id'].iloc[0])
         end_node_id = int(df['end_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
 
-            path_data = gds.shortestPath.dijkstra.stream(
+            path_data = self.gds.shortestPath.dijkstra.stream(
                 G,
                 sourceNode=start_node_id,
                 targetNode=end_node_id,
@@ -75,7 +73,7 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
                 costs = costs.tolist()
 
             # Get node names using GDS utility function
-            node_names = [gds.util.asNode(node_id) for node_id in node_ids]
+            node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
             return {
                 "totalCost": float(path_data['totalCost'].iloc[0]),
@@ -87,9 +85,6 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.find_shortest_path(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("start_node"),
             arguments.get("end_node"),
             relationshipWeightProperty=arguments.get("relationship_property")
@@ -97,16 +92,14 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
 
 
 class DeltaSteppingShortestPathHandler(AlgorithmHandler):
-    def delta_stepping_shortest_path(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def delta_stepping_shortest_path(self, source_node: str, **kwargs):
         query = """
         MATCH (source)
         WHERE toLower(source.name) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'source_name': source_node
@@ -121,12 +114,12 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df['source_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Delta-Stepping shortest path parameters: {params}")
 
-            path_data = gds.shortestPath.deltaStepping.stream(
+            path_data = self.gds.shortestPath.deltaStepping.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -145,7 +138,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
                 cost = float(row['cost'])
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "targetNodeId": node_id,
@@ -156,16 +149,13 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "paths": result_data,
                 "totalPaths": len(result_data)
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.delta_stepping_shortest_path(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             delta=arguments.get("delta"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty")
@@ -173,16 +163,14 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
 
 class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
-    def dijkstra_single_source_shortest_path(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def dijkstra_single_source_shortest_path(self, source_node: str, **kwargs):
         query = """
         MATCH (source)
         WHERE toLower(source.name) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'source_name': source_node
@@ -197,12 +185,12 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df['source_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
 
-            path_data = gds.shortestPath.dijkstra.stream(
+            path_data = self.gds.shortestPath.dijkstra.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -221,7 +209,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
                 cost = float(row['cost'])
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "targetNodeId": node_id,
@@ -232,25 +220,20 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "paths": result_data,
                 "totalPaths": len(result_data)
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.dijkstra_single_source_shortest_path(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty")
         )
 
 
 class AStarShortestPathHandler(AlgorithmHandler):
-    def a_star_shortest_path(self, db_url: str, username: str, password: str, source_node: str, target_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def a_star_shortest_path(self, source_node: str, target_node: str, **kwargs):
         query = """
         MATCH (source)
         WHERE toLower(source.name) CONTAINS toLower($source_name)
@@ -259,7 +242,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         RETURN id(source) as source_id, id(target) as target_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'source_name': source_node,
@@ -276,12 +259,12 @@ class AStarShortestPathHandler(AlgorithmHandler):
         source_node_id = int(df['source_id'].iloc[0])
         target_node_id = int(df['target_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"A* shortest path parameters: {params}")
 
-            path_data = gds.shortestPath.astar.stream(
+            path_data = self.gds.shortestPath.astar.stream(
                 G,
                 sourceNode=source_node_id,
                 targetNode=target_node_id,
@@ -305,7 +288,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
                 costs = costs.tolist()
 
             # Get node names using GDS utility function
-            node_names = [gds.util.asNode(node_id) for node_id in node_ids]
+            node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
             return {
                 "totalCost": float(path_data['totalCost'].iloc[0]),
@@ -317,9 +300,6 @@ class AStarShortestPathHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.a_star_shortest_path(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
             latitudeProperty=arguments.get("latitudeProperty"),
@@ -329,9 +309,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
 
 
 class YensShortestPathsHandler(AlgorithmHandler):
-    def yens_shortest_paths(self, db_url: str, username: str, password: str, source_node: str, target_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def yens_shortest_paths(self, source_node: str, target_node: str, **kwargs):
         query = """
         MATCH (source)
         WHERE toLower(source.name) CONTAINS toLower($source_name)
@@ -340,7 +318,7 @@ class YensShortestPathsHandler(AlgorithmHandler):
         RETURN id(source) as source_id, id(target) as target_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'source_name': source_node,
@@ -357,12 +335,12 @@ class YensShortestPathsHandler(AlgorithmHandler):
         source_node_id = int(df['source_id'].iloc[0])
         target_node_id = int(df['target_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Yen's shortest paths parameters: {params}")
 
-            path_data = gds.shortestPath.yens.stream(
+            path_data = self.gds.shortestPath.yens.stream(
                 G,
                 sourceNode=source_node_id,
                 targetNode=target_node_id,
@@ -389,7 +367,7 @@ class YensShortestPathsHandler(AlgorithmHandler):
                     costs = costs.tolist()
 
                 # Get node names using GDS utility function
-                node_names = [gds.util.asNode(node_id) for node_id in node_ids]
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
                 result_data.append({
                     "index": int(row['index']),
@@ -403,18 +381,15 @@ class YensShortestPathsHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "targetNodeId": target_node_id,
-                "targetNodeName": gds.util.asNode(target_node_id),
+                "targetNodeName": self.gds.util.asNode(target_node_id),
                 "paths": result_data,
                 "totalPaths": len(result_data)
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.yens_shortest_paths(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
             k=arguments.get("k"),
@@ -423,16 +398,14 @@ class YensShortestPathsHandler(AlgorithmHandler):
 
 
 class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
-    def minimum_weight_spanning_tree(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def minimum_weight_spanning_tree(self, source_node: str, **kwargs):
         query = """
         MATCH (source)
         WHERE toLower(source.name) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
-        df = gds.run_cypher(
+        df = self.gds.run_cypher(
             query,
             params={
                 'source_name': source_node
@@ -447,12 +420,12 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
 
         source_node_id = int(df['source_id'].iloc[0])
 
-        with projected_graph(gds, undirected=True) as G:
+        with projected_graph(self.gds, undirected=True) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Weight Spanning Tree parameters: {params}")
 
-            mst_data = gds.spanningTree.stream(
+            mst_data = self.gds.spanningTree.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -475,8 +448,8 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
                 total_weight += weight
                 
                 # Get node names using GDS utility function
-                source_name = gds.util.asNode(source_id)
-                target_name = gds.util.asNode(target_id)
+                source_name = self.gds.util.asNode(source_id)
+                target_name = self.gds.util.asNode(target_id)
                 
                 result_data.append({
                     "sourceNodeId": source_id,
@@ -489,7 +462,7 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "totalWeight": total_weight,
                 "relationships": result_data,
                 "totalRelationships": len(result_data)
@@ -497,9 +470,6 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.minimum_weight_spanning_tree(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             objective=arguments.get("objective")
@@ -507,16 +477,14 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
 
 
 class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
-    def minimum_weight_k_spanning_tree(self, db_url: str, username: str, password: str, write_property: str, k: int, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
-        with projected_graph(gds, undirected=True) as G:
+    def minimum_weight_k_spanning_tree(self, write_property: str, k: int, **kwargs):
+        with projected_graph(self.gds, undirected=True) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Weight K-Spanning Tree parameters: {params}")
 
             # Run the k-spanning tree algorithm
-            result = gds.kSpanningTree.write(
+            result = self.gds.kSpanningTree.write(
                 G,
                 writeProperty=write_property,
                 k=k,
@@ -538,9 +506,6 @@ class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.minimum_weight_k_spanning_tree(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("writeProperty"),
             arguments.get("k"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -549,9 +514,7 @@ class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
 
 
 class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
-    def minimum_directed_steiner_tree(self, db_url: str, username: str, password: str, source_node: str, target_nodes: list, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def minimum_directed_steiner_tree(self, source_node: str, target_nodes: list, **kwargs):
         # Find source node ID
         source_query = """
         MATCH (source)
@@ -559,7 +522,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
         RETURN id(source) as source_id
         """
 
-        source_df = gds.run_cypher(
+        source_df = self.gds.run_cypher(
             source_query,
             params={
                 'source_name': source_node
@@ -586,7 +549,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
             RETURN id(target) as target_id, target.name as target_name
             """
 
-            target_df = gds.run_cypher(
+            target_df = self.gds.run_cypher(
                 target_query,
                 params={
                     'target_name': target_name
@@ -612,13 +575,13 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
                 "message": "No target nodes found"
             }
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Directed Steiner Tree parameters: {params}")
 
             # Run the steiner tree algorithm
-            steiner_data = gds.steinerTree.stream(
+            steiner_data = self.gds.steinerTree.stream(
                 G,
                 sourceNode=source_node_id,
                 targetNodes=target_node_ids,
@@ -642,8 +605,8 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
                 total_weight += weight
                 
                 # Get node names using GDS utility function
-                source_name = gds.util.asNode(source_id)
-                target_name = gds.util.asNode(target_id)
+                source_name = self.gds.util.asNode(source_id)
+                target_name = self.gds.util.asNode(target_id)
                 
                 result_data.append({
                     "sourceNodeId": source_id,
@@ -656,7 +619,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "targetNodes": target_node_names,
                 "targetNodeIds": target_node_ids,
                 "totalWeight": total_weight,
@@ -666,9 +629,6 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.minimum_directed_steiner_tree(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             arguments.get("targetNodes"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -678,16 +638,14 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
 
 
 class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
-    def prize_collecting_steiner_tree(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
-        with projected_graph(gds) as G:
+    def prize_collecting_steiner_tree(self, **kwargs):
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Prize-Collecting Steiner Tree parameters: {params}")
 
             # Run the prize-collecting steiner tree algorithm
-            steiner_data = gds.prizeSteinerTree.stream(
+            steiner_data = self.gds.prizeSteinerTree.stream(
                 G,
                 **params
             )
@@ -710,8 +668,8 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
                 total_weight += weight
                 
                 # Get node names using GDS utility function
-                source_name = gds.util.asNode(source_id)
-                target_name = gds.util.asNode(target_id)
+                source_name = self.gds.util.asNode(source_id)
+                target_name = self.gds.util.asNode(target_id)
                 
                 result_data.append({
                     "sourceNodeId": source_id,
@@ -728,7 +686,7 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
                 WHERE n.{params['prizeProperty']} IS NOT NULL
                 RETURN sum(n.{params['prizeProperty']}) as totalPrize
                 """
-                prize_df = gds.run_cypher(prize_query)
+                prize_df = self.gds.run_cypher(prize_query)
                 if not prize_df.empty:
                     total_prize = float(prize_df['totalPrize'].iloc[0])
 
@@ -743,25 +701,20 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.prize_collecting_steiner_tree(
-            self.db_url,
-            self.username,
-            self.password,
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             prizeProperty=arguments.get("prizeProperty")
         )
 
 
 class AllPairsShortestPathsHandler(AlgorithmHandler):
-    def all_pairs_shortest_paths(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
-        with projected_graph(gds) as G:
+    def all_pairs_shortest_paths(self, **kwargs):
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"All Pairs Shortest Paths parameters: {params}")
 
             # Run the all pairs shortest paths algorithm
-            apsp_data = gds.allShortestPaths.stream(
+            apsp_data = self.gds.allShortestPaths.stream(
                 G,
                 **params
             )
@@ -783,7 +736,7 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
                 cost = row['cost']
                 
                 # Check if the cost is finite (not infinity)
-                is_finite = gds.util.isFinite(cost)
+                is_finite = self.gds.util.isFinite(cost)
                 
                 if is_finite:
                     finite_paths += 1
@@ -793,8 +746,8 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
                     cost_value = float('inf')
                 
                 # Get node names using GDS utility function
-                source_name = gds.util.asNode(source_id)
-                target_name = gds.util.asNode(target_id)
+                source_name = self.gds.util.asNode(source_id)
+                target_name = self.gds.util.asNode(target_id)
                 
                 result_data.append({
                     "sourceNodeId": source_id,
@@ -816,17 +769,12 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.all_pairs_shortest_paths(
-            self.db_url,
-            self.username,
-            self.password,
             relationshipWeightProperty=arguments.get("relationshipWeightProperty")
         )
 
 
 class RandomWalkHandler(AlgorithmHandler):
-    def random_walk(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def random_walk(self, **kwargs):
         # Process source nodes if provided
         source_node_ids = []
         if 'sourceNodes' in kwargs and kwargs['sourceNodes']:
@@ -837,7 +785,7 @@ class RandomWalkHandler(AlgorithmHandler):
                 RETURN id(source) as source_id
                 """
 
-                source_df = gds.run_cypher(
+                source_df = self.gds.run_cypher(
                     source_query,
                     params={
                         'source_name': source_name
@@ -847,7 +795,7 @@ class RandomWalkHandler(AlgorithmHandler):
                 if not source_df.empty:
                     source_node_ids.append(int(source_df['source_id'].iloc[0]))
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # Prepare parameters for the random walk algorithm
             params = {k: v for k, v in kwargs.items() if v is not None}
             
@@ -858,7 +806,7 @@ class RandomWalkHandler(AlgorithmHandler):
             logger.info(f"Random Walk parameters: {params}")
 
             # Run the random walk algorithm
-            walk_data = gds.randomWalk.stream(
+            walk_data = self.gds.randomWalk.stream(
                 G,
                 **params
             )
@@ -880,7 +828,7 @@ class RandomWalkHandler(AlgorithmHandler):
                 # Convert path to list of node names
                 node_names = []
                 for node_id in path:
-                    node_name = gds.util.asNode(node_id)
+                    node_name = self.gds.util.asNode(node_id)
                     node_names.append(node_name)
                 
                 result_data.append({
@@ -899,9 +847,6 @@ class RandomWalkHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.random_walk(
-            self.db_url,
-            self.username,
-            self.password,
             sourceNodes=arguments.get("sourceNodes"),
             walkLength=arguments.get("walkLength"),
             walksPerNode=arguments.get("walksPerNode"),
@@ -913,9 +858,7 @@ class RandomWalkHandler(AlgorithmHandler):
 
 
 class BreadthFirstSearchHandler(AlgorithmHandler):
-    def breadth_first_search(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def breadth_first_search(self, source_node: str, **kwargs):
         # Find source node ID
         source_query = """
         MATCH (source)
@@ -923,7 +866,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
         RETURN id(source) as source_id
         """
 
-        source_df = gds.run_cypher(
+        source_df = self.gds.run_cypher(
             source_query,
             params={
                 'source_name': source_node
@@ -948,7 +891,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                 RETURN id(target) as target_id
                 """
 
-                target_df = gds.run_cypher(
+                target_df = self.gds.run_cypher(
                     target_query,
                     params={
                         'target_name': target_name
@@ -958,7 +901,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                 if not target_df.empty:
                     target_node_ids.append(int(target_df['target_id'].iloc[0]))
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # Prepare parameters for the BFS algorithm
             params = {k: v for k, v in kwargs.items() if v is not None}
             
@@ -969,7 +912,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
             logger.info(f"Breadth First Search parameters: {params}")
 
             # Run the breadth first search algorithm
-            bfs_data = gds.bfs.stream(
+            bfs_data = self.gds.bfs.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -990,7 +933,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                 depth = int(row['depth'])
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "nodeId": node_id,
@@ -1005,18 +948,15 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "visitedNodes": visited_nodes,
                 "nodes": result_data,
                 "maxDepthReached": max([node['depth'] for node in result_data]) if result_data else 0,
-                "message": f"Visited {visited_nodes} nodes starting from '{gds.util.asNode(source_node_id)}'"
+                "message": f"Visited {visited_nodes} nodes starting from '{self.gds.util.asNode(source_node_id)}'"
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.breadth_first_search(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth")
@@ -1024,9 +964,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
 
 
 class DepthFirstSearchHandler(AlgorithmHandler):
-    def depth_first_search(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def depth_first_search(self, source_node: str, **kwargs):
         # Find source node ID
         source_query = """
         MATCH (source)
@@ -1034,7 +972,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
         RETURN id(source) as source_id
         """
 
-        source_df = gds.run_cypher(
+        source_df = self.gds.run_cypher(
             source_query,
             params={
                 'source_name': source_node
@@ -1059,7 +997,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                 RETURN id(target) as target_id
                 """
 
-                target_df = gds.run_cypher(
+                target_df = self.gds.run_cypher(
                     target_query,
                     params={
                         'target_name': target_name
@@ -1069,7 +1007,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                 if not target_df.empty:
                     target_node_ids.append(int(target_df['target_id'].iloc[0]))
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # Prepare parameters for the DFS algorithm
             params = {k: v for k, v in kwargs.items() if v is not None}
             
@@ -1080,7 +1018,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
             logger.info(f"Depth First Search parameters: {params}")
 
             # Run the depth first search algorithm
-            dfs_data = gds.dfs.stream(
+            dfs_data = self.gds.dfs.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -1101,7 +1039,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                 depth = int(row['depth'])
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "nodeId": node_id,
@@ -1116,18 +1054,15 @@ class DepthFirstSearchHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "visitedNodes": visited_nodes,
                 "nodes": result_data,
                 "maxDepthReached": max([node['depth'] for node in result_data]) if result_data else 0,
-                "message": f"Visited {visited_nodes} nodes starting from '{gds.util.asNode(source_node_id)}'"
+                "message": f"Visited {visited_nodes} nodes starting from '{self.gds.util.asNode(source_node_id)}'"
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.depth_first_search(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth")
@@ -1135,9 +1070,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
 
 
 class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
-    def bellman_ford_single_source_shortest_path(self, db_url: str, username: str, password: str, source_node: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
+    def bellman_ford_single_source_shortest_path(self, source_node: str, **kwargs):
         # Find source node ID
         source_query = """
         MATCH (source)
@@ -1145,7 +1078,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
         RETURN id(source) as source_id
         """
 
-        source_df = gds.run_cypher(
+        source_df = self.gds.run_cypher(
             source_query,
             params={
                 'source_name': source_node
@@ -1160,13 +1093,13 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(source_df['source_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Bellman-Ford Single-Source Shortest Path parameters: {params}")
 
             # Run the Bellman-Ford algorithm
-            bellman_ford_data = gds.bellmanFord.stream(
+            bellman_ford_data = self.gds.bellmanFord.stream(
                 G,
                 sourceNode=source_node_id,
                 **params
@@ -1187,7 +1120,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
                 cost = row['cost']
                 
                 # Check if the cost is finite (not infinity)
-                is_finite = gds.util.isFinite(cost)
+                is_finite = self.gds.util.isFinite(cost)
                 
                 if is_finite:
                     cost_value = float(cost)
@@ -1195,7 +1128,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
                     cost_value = float('inf')
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "targetNodeId": node_id,
@@ -1214,7 +1147,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
                             cycle = cycle.tolist()
                         
                         # Convert cycle node IDs to names
-                        cycle_names = [gds.util.asNode(node_id) for node_id in cycle]
+                        cycle_names = [self.gds.util.asNode(node_id) for node_id in cycle]
                         negative_cycles.append({
                             "cycle": cycle_names,
                             "cycleLength": len(cycle)
@@ -1223,36 +1156,31 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
-                "sourceNodeName": gds.util.asNode(source_node_id),
+                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "paths": result_data,
                 "totalPaths": len(result_data),
                 "negativeCycles": negative_cycles,
                 "hasNegativeCycles": len(negative_cycles) > 0,
-                "message": f"Found {len(result_data)} paths from '{gds.util.asNode(source_node_id)}'" + 
+                "message": f"Found {len(result_data)} paths from '{self.gds.util.asNode(source_node_id)}'" + 
                           (f" and {len(negative_cycles)} negative cycles" if negative_cycles else "")
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.bellman_ford_single_source_shortest_path(
-            self.db_url,
-            self.username,
-            self.password,
             arguments.get("sourceNode"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty")
         )
 
 
 class LongestPathHandler(AlgorithmHandler):
-    def longest_path(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-
-        with projected_graph(gds) as G:
+    def longest_path(self, **kwargs):
+        with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Longest Path parameters: {params}")
 
             # Run the longest path algorithm
-            longest_path_data = gds.dag.longestPath.stream(
+            longest_path_data = self.gds.dag.longestPath.stream(
                 G,
                 **params
             )
@@ -1272,7 +1200,7 @@ class LongestPathHandler(AlgorithmHandler):
                 cost = row['cost']
                 
                 # Check if the cost is finite (not infinity)
-                is_finite = gds.util.isFinite(cost)
+                is_finite = self.gds.util.isFinite(cost)
                 
                 if is_finite:
                     cost_value = float(cost)
@@ -1281,7 +1209,7 @@ class LongestPathHandler(AlgorithmHandler):
                     cost_value = float('inf')
                 
                 # Get node name using GDS utility function
-                node_name = gds.util.asNode(node_id)
+                node_name = self.gds.util.asNode(node_id)
                 
                 result_data.append({
                     "nodeId": node_id,
@@ -1304,8 +1232,5 @@ class LongestPathHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.longest_path(
-            self.db_url,
-            self.username,
-            self.password,
             relationshipWeightProperty=arguments.get("relationshipWeightProperty")
         )

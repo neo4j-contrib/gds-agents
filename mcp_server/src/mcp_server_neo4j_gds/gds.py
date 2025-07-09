@@ -105,13 +105,11 @@ def projected_graph(gds, undirected=False):
     finally:
         gds.graph.drop(graph_name)
 
-def count_nodes(db_url: str, username: str, password: str):
-    gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
+def count_nodes(gds: GraphDataScience):
     with projected_graph(gds) as G:
         return G.node_count()
 
-def get_node_properties_keys(db_url: str, username: str, password: str):
-    gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
+def get_node_properties_keys(gds: GraphDataScience):
     with projected_graph(gds) as G:
         query = """
         MATCH (n)

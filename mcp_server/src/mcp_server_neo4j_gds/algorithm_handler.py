@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
-
+from graphdatascience import GraphDataScience
 
 class AlgorithmHandler(ABC):
-    def __init__(self, db_url: str, username: str, password: str):
-        self.db_url = db_url
-        self.username = username
-        self.password = password
+    def __init__(self, gds: GraphDataScience):
+        self.gds = gds
 
     @abstractmethod
     def execute(self, arguments: Dict[str, Any]) -> Any:
