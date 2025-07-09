@@ -12,6 +12,7 @@ from .centrality_algorithm_specs import centrality_tool_definitions
 from .community_algorithm_specs import community_tool_definitions
 from .path_algorithm_specs import path_tool_definitions
 from .registry import AlgorithmRegistry
+from .gds import count_nodes, get_node_properties_keys
 
 logger = logging.getLogger('mcp_server_neo4j_gds')
 logging.basicConfig(
@@ -39,10 +40,18 @@ def serialize_result(result: Any) -> str:
         # For other types, use string conversion
         return str(result)
 
-async def main(db_url: str, username: str, password: str):
+async def main(db_url: str, username: str, password: str, database: str = None):
     logger.info(f"Starting MCP Server for {db_url} with username {username}")
+    if database:
+        logger.info(f"Connecting to database: {database}")
+    
     server = Server("example-server")
-    gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
+    
+    # Create GraphDataScience object with optional database parameter
+    if database:
+        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False, database=database)
+    else:
+        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
@@ -69,11 +78,11 @@ async def main(db_url: str, username: str, password: str):
         """Handle tool execution requests"""
         try:
             if name == "count_nodes":
-                result = gds.count_nodes(gds)
+                result = count_nodes(gds)
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
             elif name == "get_node_properties_keys":
-                result = gds.get_node_properties_keys(gds)
+                result = get_node_properties_keys(gds)
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
             else:

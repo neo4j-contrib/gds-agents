@@ -21,6 +21,9 @@ def main():
     parser.add_argument('--password', 
                        default=os.environ.get("NEO4J_PASSWORD"),
                        help='Password for Neo4j database')
+    parser.add_argument('--database', 
+                       default=os.environ.get("NEO4J_DATABASE"),
+                       help='Database name to connect to (optional). By default, the server will connect to the \'neo4j\' database.')
     
     args = parser.parse_args()
     logging.basicConfig(
@@ -32,7 +35,9 @@ def main():
         ]
     )
     logging.info(f"Starting MCP Server for {args.db_url} with username {args.username}")
-    asyncio.run(server.main(db_url=args.db_url, username=args.username, password=args.password))
+    if args.database:
+        logging.info(f"Connecting to database: {args.database}")
+    asyncio.run(server.main(db_url=args.db_url, username=args.username, password=args.password, database=args.database))
 
 
 __all__ = ["main", "server"]
