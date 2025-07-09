@@ -8,13 +8,10 @@ from .gds import projected_graph
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("mcp_server_neo4j_gds.log"),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
 )
-logger = logging.getLogger('mcp_server_neo4j_gds')
+logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class NodeSimilarityHandler(AlgorithmHandler):
@@ -45,11 +42,15 @@ class NodeSimilarityHandler(AlgorithmHandler):
 
 
 class FilteredNodeSimilarityHandler(AlgorithmHandler):
-    def filtered_node_similarity(self, db_url: str, username: str, password: str, **kwargs):
+    def filtered_node_similarity(
+        self, db_url: str, username: str, password: str, **kwargs
+    ):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
         with projected_graph(gds) as G:
             logger.info(f"Filtered Node Similarity parameters: {kwargs}")
-            filtered_node_similarity_result = gds.nodeSimilarity.filtered.stream(G, **kwargs)
+            filtered_node_similarity_result = gds.nodeSimilarity.filtered.stream(
+                G, **kwargs
+            )
 
         return filtered_node_similarity_result
 
@@ -100,7 +101,9 @@ class KNearestNeighborsHandler(AlgorithmHandler):
 
 
 class FilteredKNearestNeighborsHandler(AlgorithmHandler):
-    def filtered_k_nearest_neighbors(self, db_url: str, username: str, password: str, **kwargs):
+    def filtered_k_nearest_neighbors(
+        self, db_url: str, username: str, password: str, **kwargs
+    ):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
         with projected_graph(gds) as G:
             logger.info(f"Filtered K-Nearest Neighbors parameters: {kwargs}")

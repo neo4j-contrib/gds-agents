@@ -14,24 +14,28 @@ from .path_algorithm_specs import path_tool_definitions
 from .registry import AlgorithmRegistry
 from .gds import count_nodes, get_node_properties_keys
 
-logger = logging.getLogger('mcp_server_neo4j_gds')
+logger = logging.getLogger("mcp_server_neo4j_gds")
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("mcp_server_neo4j_gds.log"),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
 )
+
 
 def serialize_result(result: Any) -> str:
     """Serialize results to string without truncation, handling DataFrames specially"""
     if isinstance(result, pd.DataFrame):
         # Configure pandas to show all rows and columns
-        with pd.option_context('display.max_rows', None, 
-                              'display.max_columns', None,
-                              'display.width', None,
-                              'display.max_colwidth', None):
+        with pd.option_context(
+            "display.max_rows",
+            None,
+            "display.max_columns",
+            None,
+            "display.width",
+            None,
+            "display.max_colwidth",
+            None,
+        ):
             return result.to_string(index=True)
     elif isinstance(result, (list, dict)):
         # Use JSON for better formatting of complex data structures
@@ -40,41 +44,51 @@ def serialize_result(result: Any) -> str:
         # For other types, use string conversion
         return str(result)
 
+
 async def main(db_url: str, username: str, password: str, database: str = None):
     logger.info(f"Starting MCP Server for {db_url} with username {username}")
     if database:
         logger.info(f"Connecting to database: {database}")
-    
+
     server = Server("example-server")
-    
+
     # Create GraphDataScience object with optional database parameter
     if database:
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False, database=database)
+        gds = GraphDataScience(
+            db_url, auth=(username, password), aura_ds=False, database=database
+        )
     else:
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
         """List available tools"""
-        return [
-            types.Tool(
-                name="count_nodes",
-                description="""Count the number of nodes in the graph""",
-                inputSchema={
-                    "type": "object",
-                },
-            ),
-            types.Tool(
-                name="get_node_properties_keys",
-                description="""Get all node properties keys in the database""",
-                inputSchema={
-                    "type": "object",
-                },
-            ),
-        ] + centrality_tool_definitions + community_tool_definitions + path_tool_definitions
-    
+        return (
+            [
+                types.Tool(
+                    name="count_nodes",
+                    description="""Count the number of nodes in the graph""",
+                    inputSchema={
+                        "type": "object",
+                    },
+                ),
+                types.Tool(
+                    name="get_node_properties_keys",
+                    description="""Get all node properties keys in the database""",
+                    inputSchema={
+                        "type": "object",
+                    },
+                ),
+            ]
+            + centrality_tool_definitions
+            + community_tool_definitions
+            + path_tool_definitions
+        )
+
     @server.call_tool()
-    async def handle_call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+    async def handle_call_tool(
+        name: str, arguments: dict[str, Any] | None
+    ) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle tool execution requests"""
         try:
             if name == "count_nodes":
@@ -95,19 +109,19 @@ async def main(db_url: str, username: str, password: str, database: str = None):
 
     try:
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-                await server.run(
-                    read_stream,
-                    write_stream,
-                    InitializationOptions(
-                        server_name="neo4j_gds",
-                        server_version="0.1.0",
-                        capabilities=server.get_capabilities(
-                            notification_options=NotificationOptions(),
-                            experimental_capabilities={},
-                        ),
+            await server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="neo4j_gds",
+                    server_version="0.1.0",
+                    capabilities=server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={},
                     ),
-                        raise_exceptions=True,
-                    )
+                ),
+                raise_exceptions=True,
+            )
     finally:
         logger.info("Closing GDS connection as MCP server is shutting down.")
         gds.close()

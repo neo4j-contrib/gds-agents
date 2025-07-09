@@ -16,7 +16,10 @@ build-backend = "hatchling.build"
 [project.scripts]
 mcp-neo4j-gds = "mcp_server_neo4j_gds:main"
 
-[project.optional-dependencies]
+[tool.ruff]
+target-version = "py311"
+
+[dependency-groups]
 dev = [
     "ruff>=0.12.2",
     "pytest>=8.4.1"

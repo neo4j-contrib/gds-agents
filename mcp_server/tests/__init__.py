@@ -1,1 +1,1 @@
-# Tests package for mcp-server-neo4j-gds 
+# Tests package for mcp-server-neo4j-gds

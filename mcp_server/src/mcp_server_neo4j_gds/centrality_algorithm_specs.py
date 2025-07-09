@@ -8,56 +8,59 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the ArticleRank for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the ArticleRank for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
-                "dampingFactor": {"type": "number",
-                                  "description": "The damping factor of the ArticleRank calculation. Must be in [0, 1)."},
-                "maxIterations": {"type": "integer", "description": "Maximum number of iterations for ArticleRank"},
-                "tolerance": {"type": "number", "description": "Minimum change in scores between iterations."},
+                "dampingFactor": {
+                    "type": "number",
+                    "description": "The damping factor of the ArticleRank calculation. Must be in [0, 1).",
+                },
+                "maxIterations": {
+                    "type": "integer",
+                    "description": "Maximum number of iterations for ArticleRank",
+                },
+                "tolerance": {
+                    "type": "number",
+                    "description": "Minimum change in scores between iterations.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
-                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally."
+                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
                 # The signature takes node "names" STRING instead of nodeIds according to GDS doc.
                 # The "names" need to be resolved to actual nodes, using the property_key.
                 "sourceNodes": {
                     "description": "The nodes or node ids or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
                     "anyOf": [
-                        {
-                            "type": "string",
-                            "description": "Single node"
-                        },
+                        {"type": "string", "description": "Single node"},
                         {
                             "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "List of nodes"
+                            "items": {"type": "string"},
+                            "description": "List of nodes",
                         },
                         {
                             "type": "array",
                             "items": {
                                 "type": "array",
-                                "prefixItems": [
-                                    {"type": "string"},
-                                    {"type": "number"}
-                                ],
+                                "prefixItems": [{"type": "string"}, {"type": "number"}],
                                 "minItems": 2,
-                                "maxItems": 2
+                                "maxItems": 2,
                             },
-                            "description": "List of [node, bias] pairs"
-                        }
-                    ]
+                            "description": "List of [node, bias] pairs",
+                        },
+                    ],
                 },
                 "scaler": {
                     "type": "string",
                     "description": "The name of the scaler applied for the final scores. "
-                                   "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
-                                   "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}."
+                    "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
+                    "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}.",
                 },
             },
             "required": [],
@@ -79,19 +82,19 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the betweenness centrality for."
+                    "description": "List of nodes to return the betweenness centrality for.",
                 },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
                 "samplingSize": {
                     "type": "integer",
-                    "description": "The number of source nodes to consider for computing centrality scores."
+                    "description": "The number of source nodes to consider for computing centrality scores.",
                 },
                 "relationshipWeightProperty": {
                     "type": "string",
-                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally."
+                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
             },
             "required": [],
@@ -113,19 +116,19 @@ centrality_tool_definitions = [
             "properties": {
                 "seedSetSize": {
                     "type": "integer",
-                    "description": "The number of nodes that maximize the expected spread in the network."
+                    "description": "The number of nodes that maximize the expected spread in the network.",
                 },
                 "monteCarloSimulations": {
                     "type": "integer",
-                    "description": "The number of Monte Carlo simulations to run for estimating the expected spread."
+                    "description": "The number of Monte Carlo simulations to run for estimating the expected spread.",
                 },
                 "propagationProbability": {
                     "type": "number",
-                    "description": "The probability of propagating influence from a node to its neighbors."
-                }
+                    "description": "The probability of propagating influence from a node to its neighbors.",
+                },
             },
             "required": ["seedSetSize"],
-        }
+        },
     ),
     types.Tool(
         name="closeness_centrality",
@@ -135,16 +138,19 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the closeness centrality for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the closeness centrality for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
                 "useWassermanFaust": {
                     "type": "boolean",
-                    "description": "If true, uses the Wasserman-Faust formula for closeness centrality. "
-                }
+                    "description": "If true, uses the Wasserman-Faust formula for closeness centrality. ",
+                },
             },
             "required": [],
         },
@@ -155,12 +161,15 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the centrality for"},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the centrality for",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
-                }
+                    "description": "Property key to use to filter the specified nodes.",
+                },
             },
             "required": [],
         },
@@ -179,59 +188,58 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the eigenvector centrality for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the eigenvector centrality for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
-                "maxIterations": {"type": "integer",
-                                  "description": "Maximum number of iterations for Eigenvector Centrality"},
-                "tolerance": {"type": "number",
-                              "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns."},
+                "maxIterations": {
+                    "type": "integer",
+                    "description": "Maximum number of iterations for Eigenvector Centrality",
+                },
+                "tolerance": {
+                    "type": "number",
+                    "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
-                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally."
+                    "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
                 # The signature takes node "names" STRING instead of nodeIds according to GDS doc.
                 # The "names" need to be resolved to actual nodes, using the property_key.
                 "sourceNodes": {
                     "description": "The nodes or node ids or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
                     "anyOf": [
-                        {
-                            "type": "string",
-                            "description": "Single node"
-                        },
+                        {"type": "string", "description": "Single node"},
                         {
                             "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "List of nodes"
+                            "items": {"type": "string"},
+                            "description": "List of nodes",
                         },
                         {
                             "type": "array",
                             "items": {
                                 "type": "array",
-                                "prefixItems": [
-                                    {"type": "string"},
-                                    {"type": "number"}
-                                ],
+                                "prefixItems": [{"type": "string"}, {"type": "number"}],
                                 "minItems": 2,
-                                "maxItems": 2
+                                "maxItems": 2,
                             },
-                            "description": "List of [node, bias] pairs"
-                        }
-                    ]
+                            "description": "List of [node, bias] pairs",
+                        },
+                    ],
                 },
                 "scaler": {
                     "type": "string",
                     "description": "The name of the scaler applied for the final scores. "
-                                   "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
-                                   "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}."
+                    "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
+                    "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}.",
                 },
             },
-        }
+        },
     ),
     types.Tool(
         name="pagerank",
@@ -239,17 +247,27 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the PageRank for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the PageRank for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
-                "dampingFactor": {"type": "number",
-                                  "description": "The damping factor of the Page Rank calculation. Must be in [0, 1)."},
-                "maxIterations": {"type": "integer", "description": "Maximum number of iterations for PageRank"},
-                "tolerance": {"type": "number",
-                              "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns."}
+                "dampingFactor": {
+                    "type": "number",
+                    "description": "The damping factor of the Page Rank calculation. Must be in [0, 1).",
+                },
+                "maxIterations": {
+                    "type": "integer",
+                    "description": "Maximum number of iterations for PageRank",
+                },
+                "tolerance": {
+                    "type": "number",
+                    "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns.",
+                },
             },
             "required": [],
         },
@@ -261,15 +279,18 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the harmonic centrality for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the harmonic centrality for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
             },
             "required": [],
-        }
+        },
     ),
     types.Tool(
         name="HITS",
@@ -279,22 +300,34 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {"type": "array", "items": {"type": "string"},
-                          "description": "List of nodes to return the HITS scores for."},
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of nodes to return the HITS scores for.",
+                },
                 "property_key": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes."
+                    "description": "Property key to use to filter the specified nodes.",
                 },
-                "hitsIterations": {"type": "integer", "description": "The number of hits iterations to run. The number of pregel iterations will be equal to hitsIterations * 4."},
-                "authProperty": {"type": "string", "description": "The name of the auth property to use."},
-                "hubProperty": {"type": "string", "description": "The name of the hub property to use."},
+                "hitsIterations": {
+                    "type": "integer",
+                    "description": "The number of hits iterations to run. The number of pregel iterations will be equal to hitsIterations * 4.",
+                },
+                "authProperty": {
+                    "type": "string",
+                    "description": "The name of the auth property to use.",
+                },
+                "hubProperty": {
+                    "type": "string",
+                    "description": "The name of the hub property to use.",
+                },
                 "partitioning": {
                     "type": "string",
                     "enum": ["AUTO", "RANGE", "DEGREE"],
-                    "description": "The partitioning scheme used to divide the work between threads. Available options are AUTO, RANGE, DEGREE."
-                }
+                    "description": "The partitioning scheme used to divide the work between threads. Available options are AUTO, RANGE, DEGREE.",
+                },
             },
             "required": [],
         },
-    )
+    ),
 ]

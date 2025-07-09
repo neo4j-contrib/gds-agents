@@ -1,20 +1,16 @@
 import logging
 from typing import Dict, Any
 
-from graphdatascience import GraphDataScience
 
 from .algorithm_handler import AlgorithmHandler
 from .gds import projected_graph
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("mcp_server_neo4j_gds.log"),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
 )
-logger = logging.getLogger('mcp_server_neo4j_gds')
+logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class ConductanceHandler(AlgorithmHandler):
@@ -52,7 +48,7 @@ class HDBSCANHandler(AlgorithmHandler):
 class KCoreDecompositionHandler(AlgorithmHandler):
     def k_core_decomposition(self):
         with projected_graph(self.gds, undirected=True) as G:
-            logger.info(f"Running K-Core Decomposition")
+            logger.info("Running K-Core Decomposition")
             kcore_decomposition_result = self.gds.kcore_decomposition.stream(G)
 
         return kcore_decomposition_result
@@ -95,7 +91,7 @@ class KMeansClusteringHandler(AlgorithmHandler):
             seedCentroids=arguments.get("seedCentroids"),
             computeSilhouette=arguments.get("computeSilhouette"),
         )
-    
+
 
 class LabelPropagationHandler(AlgorithmHandler):
     def label_propagation(self, **kwargs):
@@ -114,7 +110,7 @@ class LabelPropagationHandler(AlgorithmHandler):
             consecutiveIds=arguments.get("consecutiveIds"),
             minCommunitySize=arguments.get("minCommunitySize"),
         )
-    
+
 
 class LeidenHandler(AlgorithmHandler):
     def leiden(self, **kwargs):
@@ -130,7 +126,9 @@ class LeidenHandler(AlgorithmHandler):
             gamma=arguments.get("gamma"),
             theta=arguments.get("theta"),
             tolerance=arguments.get("tolerance"),
-            includeIntermediateCommunities=arguments.get("includeIntermediateCommunities"),
+            includeIntermediateCommunities=arguments.get(
+                "includeIntermediateCommunities"
+            ),
             seedProperty=arguments.get("seedProperty"),
             minCommunitySize=arguments.get("minCommunitySize"),
         )
@@ -140,7 +138,9 @@ class LocalClusteringCoefficientHandler(AlgorithmHandler):
     def local_clustering_coefficient(self, **kwargs):
         with projected_graph(self.gds, undirected=True) as G:
             logger.info(f"Local Clustering Coefficient parameters: {kwargs}")
-            local_clustering_coefficient_result = self.gds.local_clustering_coefficient.stream(G, **kwargs)
+            local_clustering_coefficient_result = (
+                self.gds.local_clustering_coefficient.stream(G, **kwargs)
+            )
 
         return local_clustering_coefficient_result
 
@@ -165,7 +165,9 @@ class LouvainHandler(AlgorithmHandler):
             maxLevels=arguments.get("maxLevels"),
             maxIterations=arguments.get("maxIterations"),
             tolerance=arguments.get("tolerance"),
-            includeIntermediateCommunities=arguments.get("includeIntermediateCommunities"),
+            includeIntermediateCommunities=arguments.get(
+                "includeIntermediateCommunities"
+            ),
             consecutiveIds=arguments.get("consecutiveIds"),
             minCommunitySize=arguments.get("minCommunitySize"),
         )
@@ -178,22 +180,24 @@ class ModularityMetricHandler(AlgorithmHandler):
             modularity_metric_result = self.gds.modularity_metric.stream(G, **kwargs)
 
         return modularity_metric_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.modularity_metric(
             communityProperty=arguments.get("communityProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
-    
+
 
 class ModularityOptimizationHandler(AlgorithmHandler):
     def modularity_optimization(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Modularity Optimization parameters: {kwargs}")
-            modularity_optimization_result = self.gds.modularity_optimization.stream(G, **kwargs)
+            modularity_optimization_result = self.gds.modularity_optimization.stream(
+                G, **kwargs
+            )
 
         return modularity_optimization_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.modularity_optimization(
             maxIterations=arguments.get("maxIterations"),
@@ -203,16 +207,18 @@ class ModularityOptimizationHandler(AlgorithmHandler):
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             minCommunitySize=arguments.get("minCommunitySize"),
         )
-    
+
 
 class StronglyConnectedComponentsHandler(AlgorithmHandler):
     def strongly_connected_components(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Strongly Connected Components parameters: {kwargs}")
-            strongly_connected_components_result = self.gds.strongly_connected_components.stream(G, **kwargs)
+            strongly_connected_components_result = (
+                self.gds.strongly_connected_components.stream(G, **kwargs)
+            )
 
         return strongly_connected_components_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.strongly_connected_components(
             consecutiveIds=arguments.get("consecutiveIds"),
@@ -226,7 +232,7 @@ class TriangleCountHandler(AlgorithmHandler):
             triangle_count_result = self.gds.triangle_count.stream(G, **kwargs)
 
         return triangle_count_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.triangle_count(
             maxDegree=arguments.get("maxDegree"),
@@ -237,10 +243,12 @@ class WeaklyConnectedComponentsHandler(AlgorithmHandler):
     def weakly_connected_components(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Weakly Connected Components parameters: {kwargs}")
-            weakly_connected_components_result = self.gds.weakly_connected_components.stream(G, **kwargs)
+            weakly_connected_components_result = (
+                self.gds.weakly_connected_components.stream(G, **kwargs)
+            )
 
         return weakly_connected_components_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.weakly_connected_components(
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -255,10 +263,12 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
     def approximate_maximum_k_cut(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Approximate Maximum K Cut parameters: {kwargs}")
-            approximate_maximum_k_cut_result = self.gds.approximate_maximum_k_cut.stream(G, **kwargs)
+            approximate_maximum_k_cut_result = (
+                self.gds.approximate_maximum_k_cut.stream(G, **kwargs)
+            )
 
         return approximate_maximum_k_cut_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.approximate_maximum_k_cut(
             k=arguments.get("k"),
@@ -269,15 +279,16 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
         )
 
 
-
 class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
     def speaker_listener_label_propagation(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Speaker Listener Label Propagation parameters: {kwargs}")
-            speaker_listener_label_propagation_result = self.gds.speaker_listener_label_propagation.stream(G, **kwargs)
+            speaker_listener_label_propagation_result = (
+                self.gds.speaker_listener_label_propagation.stream(G, **kwargs)
+            )
 
         return speaker_listener_label_propagation_result
-    
+
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.speaker_listener_label_propagation(
             maxIterations=arguments.get("maxIterations"),

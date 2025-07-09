@@ -1,37 +1,40 @@
 import logging
 from typing import Any, Dict
 
-from graphdatascience import GraphDataScience
 
 from .algorithm_handler import AlgorithmHandler
 from .gds import projected_graph
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("mcp_server_neo4j_gds.log"),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
 )
-logger = logging.getLogger('mcp_server_neo4j_gds')
+logger = logging.getLogger("mcp_server_neo4j_gds")
+
 
 class ArticleRankHandler(AlgorithmHandler):
     def article_rank(self, **kwargs):
         with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
-            names = kwargs.get('nodes', None)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
+            names = kwargs.get("nodes", None)
             logger.info(f"ArticleRank parameters: {params}")
             article_ranks = self.gds.articleRank.stream(G, **params)
 
         if names is not None:
             logger.info(f"Filtering ArticleRank results for nodes: {names}")
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
             query = f"""
             UNWIND $names AS name
             MATCH (s)
@@ -41,11 +44,11 @@ class ArticleRankHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            article_ranks = article_ranks[article_ranks['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            article_ranks = article_ranks[article_ranks["nodeId"].isin(node_ids)]
 
         return article_ranks
 
@@ -57,9 +60,10 @@ class ArticleRankHandler(AlgorithmHandler):
             scaler=arguments.get("scaler"),
             dampingFactor=arguments.get("dampingFactor"),
             maxIterations=arguments.get("maxIterations"),
-            tolerance=arguments.get("tolerance")
+            tolerance=arguments.get("tolerance"),
         )
-    
+
+
 class ArticulationPointsHandler(AlgorithmHandler):
     def articulation_points(self):
         with projected_graph(self.gds) as G:
@@ -75,17 +79,23 @@ class BetweennessCentralityHandler(AlgorithmHandler):
     def betweenness_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
             args = locals()
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
-            names = kwargs.get('nodes', None)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
+            names = kwargs.get("nodes", None)
             logger.info(f"Betweenness centrality parameters: {params}")
             centrality = self.gds.betweenness.stream(G, **params)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -96,18 +106,17 @@ class BetweennessCentralityHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            centrality = centrality[centrality['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            centrality = centrality[centrality["nodeId"].isin(node_ids)]
 
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.betweenness_centrality(
-            nodes=arguments.get("nodes"),
-            property_key=arguments.get("property_key")
+            nodes=arguments.get("nodes"), property_key=arguments.get("property_key")
         )
 
 
@@ -134,23 +143,29 @@ class CELFHandler(AlgorithmHandler):
         return self.celf(
             seedSetSize=arguments.get("seedSetSize"),
             monteCarloSimulations=arguments.get("monteCarloSimulations"),
-            propagationProbability=arguments.get("propagationProbability")
+            propagationProbability=arguments.get("propagationProbability"),
         )
 
 
 class ClosenessCentralityHandler(AlgorithmHandler):
     def closeness_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
             logger.info(f"Closeness centrality parameters: {params}")
             centrality = self.gds.closeness.stream(G, **params)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -161,31 +176,33 @@ class ClosenessCentralityHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            centrality = centrality[centrality['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            centrality = centrality[centrality["nodeId"].isin(node_ids)]
 
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.closeness_centrality(
-            nodes=arguments.get("nodes"),
-            property_key=arguments.get("property_key")
+            nodes=arguments.get("nodes"), property_key=arguments.get("property_key")
         )
+
 
 class DegreeCentralityHandler(AlgorithmHandler):
     def degree_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
             centrality = self.gds.degree.stream(G)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -196,34 +213,39 @@ class DegreeCentralityHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            centrality = centrality[centrality['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            centrality = centrality[centrality["nodeId"].isin(node_ids)]
 
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.degree_centrality(
-            nodes=arguments.get("nodes"),
-            property_key=arguments.get("property_key")
+            nodes=arguments.get("nodes"), property_key=arguments.get("property_key")
         )
 
 
 class EigenvectorCentralityHandler(AlgorithmHandler):
     def eigenvector_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
             logger.info(f"Eigenvector centrality parameters: {params}")
             centrality = self.gds.eigenvector.stream(G, **params)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -234,11 +256,11 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            centrality = centrality[centrality['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            centrality = centrality[centrality["nodeId"].isin(node_ids)]
 
         return centrality
 
@@ -259,17 +281,23 @@ class PageRankHandler(AlgorithmHandler):
         with projected_graph(self.gds) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
-            names = kwargs.get('nodes', None)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
+            names = kwargs.get("nodes", None)
             logger.info(f"Pagerank parameters: {params}")
             pageranks = self.gds.pageRank.stream(G, **params)
 
         if names is not None:
             logger.info(f"Filtering pagerank results for nodes: {names}")
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
             query = f"""
             UNWIND $names AS name
             MATCH (s)
@@ -279,11 +307,11 @@ class PageRankHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            pageranks = pageranks[pageranks['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            pageranks = pageranks[pageranks["nodeId"].isin(node_ids)]
 
         return pageranks
 
@@ -293,7 +321,7 @@ class PageRankHandler(AlgorithmHandler):
             property_key=arguments.get("property_key"),
             dampingFactor=arguments.get("dampingFactor"),
             maxIterations=arguments.get("maxIterations"),
-            tolerance=arguments.get("tolerance")
+            tolerance=arguments.get("tolerance"),
         )
 
 
@@ -302,12 +330,14 @@ class HarmonicCentralityHandler(AlgorithmHandler):
         with projected_graph(self.gds) as G:
             centrality = self.gds.harmonic.stream(G)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -318,34 +348,39 @@ class HarmonicCentralityHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            centrality = centrality[centrality['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            centrality = centrality[centrality["nodeId"].isin(node_ids)]
 
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.harmonic_centrality(
-            nodes=arguments.get("nodes"),
-            property_key=arguments.get("property_key")
+            nodes=arguments.get("nodes"), property_key=arguments.get("property_key")
         )
 
 
 class HITSHandler(AlgorithmHandler):
     def hits(self, **kwargs):
         with projected_graph(self.gds) as G:
-            params = {k: v for k, v in kwargs.items() if v is not None and k not in ['nodes', 'property_key']}
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "property_key"]
+            }
             logger.info(f"HITS parameters: {params}")
             result = self.gds.hits.stream(G, **params)
 
-        names = kwargs.get('nodes', None)
+        names = kwargs.get("nodes", None)
         if names is not None:
-            property_key = kwargs.get('property_key', None)
+            property_key = kwargs.get("property_key", None)
             if property_key is None:
-                raise ValueError("If 'nodes' is provided, 'property_key' must also be specified. "
-                                 "get_node_properties_keys should return all available property keys and the most appropriate one can be picked.")
+                raise ValueError(
+                    "If 'nodes' is provided, 'property_key' must also be specified. "
+                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                )
 
             query = f"""
             UNWIND $names AS name
@@ -356,11 +391,11 @@ class HITSHandler(AlgorithmHandler):
             df = self.gds.run_cypher(
                 query,
                 params={
-                    'names': names,
-                }
+                    "names": names,
+                },
             )
-            node_ids = df['node_id'].tolist()
-            result = result[result['nodeId'].isin(node_ids)]
+            node_ids = df["node_id"].tolist()
+            result = result[result["nodeId"].isin(node_ids)]
 
         return result
 
@@ -371,5 +406,5 @@ class HITSHandler(AlgorithmHandler):
             hitsIterations=arguments.get("hitsIterations"),
             authProperty=arguments.get("authProperty"),
             hubProperty=arguments.get("hubProperty"),
-            partitioning= arguments.get("partitioning")
+            partitioning=arguments.get("partitioning"),
         )

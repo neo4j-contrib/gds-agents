@@ -17,8 +17,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
         working-directory: mcp_server
-      - name: Run ruff
-        run: uv run ruff .
+      - name: Run ruff check
+        run: uv run ruff check
+        working-directory: mcp_server
+      - name: Run ruff format
+        run: uv run ruff format --check
         working-directory: mcp_server
   test:
     runs-on: ubuntu-latest
