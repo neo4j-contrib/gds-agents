@@ -60,7 +60,7 @@ class HDBSCANHandler(AlgorithmHandler):
 class KCoreDecompositionHandler(AlgorithmHandler):
     def k_core_decomposition(self, db_url: str, username: str, password: str):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             logger.info(f"Running K-Core Decomposition")
             kcore_decomposition_result = gds.kcore_decomposition.stream(G)
 
@@ -144,7 +144,7 @@ class LabelPropagationHandler(AlgorithmHandler):
 class LeidenHandler(AlgorithmHandler):
     def leiden(self, db_url: str, username: str, password: str, **kwargs):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             logger.info(f"Leiden parameters: {kwargs}")
             leiden_result = gds.leiden.stream(G, **kwargs)
 
@@ -168,7 +168,7 @@ class LeidenHandler(AlgorithmHandler):
 class LocalClusteringCoefficientHandler(AlgorithmHandler):
     def local_clustering_coefficient(self, db_url: str, username: str, password: str, **kwargs):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             logger.info(f"Local Clustering Coefficient parameters: {kwargs}")
             local_clustering_coefficient_result = gds.local_clustering_coefficient.stream(G, **kwargs)
 
@@ -271,7 +271,7 @@ class StronglyConnectedComponentsHandler(AlgorithmHandler):
 class TriangleCountHandler(AlgorithmHandler):
     def triangle_count(self, db_url: str, username: str, password: str, **kwargs):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             logger.info(f"Triangle Count parameters: {kwargs}")
             triangle_count_result = gds.triangle_count.stream(G, **kwargs)
 

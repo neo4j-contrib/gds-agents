@@ -447,7 +447,7 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
 
         source_node_id = int(df['source_id'].iloc[0])
 
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Weight Spanning Tree parameters: {params}")
@@ -510,7 +510,7 @@ class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
     def minimum_weight_k_spanning_tree(self, db_url: str, username: str, password: str, write_property: str, k: int, **kwargs):
         gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
 
-        with projected_graph(gds) as G:
+        with projected_graph(gds, undirected=True) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Weight K-Spanning Tree parameters: {params}")
