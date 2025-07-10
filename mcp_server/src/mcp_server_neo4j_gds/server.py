@@ -44,28 +44,62 @@ def serialize_result(result: Any) -> str:
 
 
 def create_algorithm_tool(mcp: FastMCP, tool_name: str, gds: GraphDataScience):
-    """Create and register an algorithm tool with proper closure"""
+    """Create and register an algorithm tool using a single parameters dict approach"""
+    handler = AlgorithmRegistry.get_handler(tool_name, gds)
 
-    async def algorithm_tool(parameters: Dict[str, Any] = None) -> str:
-        """Execute algorithm tool with parameters dictionary"""
-        try:
-            handler = AlgorithmRegistry.get_handler(tool_name, gds)
-            result = handler.execute(parameters or {})
-            return serialize_result(result)
-        except Exception as e:
-            return f"Error executing {tool_name}: {str(e)}"
+    # Get tool definition from specs to extract parameter information
+    all_tool_definitions = (
+        centrality_tool_definitions
+        + community_tool_definitions
+        + path_tool_definitions
+        + similarity_tool_definitions
+    )
 
-    # Set the function name and docstring
-    algorithm_tool.__name__ = tool_name
-    algorithm_tool.__doc__ = f"Execute {tool_name} algorithm with parameters dictionary"
+    tool_def = None
+    for tool in all_tool_definitions:
+        if tool.name == tool_name:
+            tool_def = tool
+            break
 
-    # Register the tool with the server
-    mcp.tool(algorithm_tool)
+    if tool_def:
+        # Create a function that accepts a single parameters dict
+        # This is the only approach that works consistently with FastMCP
+        async def algorithm_tool(parameters: Dict[str, Any] = None) -> str:
+            """Execute algorithm tool with parameters dictionary"""
+            try:
+                result = handler.execute(parameters or {})
+                return serialize_result(result)
+            except Exception as e:
+                return f"Error executing {tool_name}: {str(e)}"
+
+        # Set the function name and docstring
+        algorithm_tool.__name__ = tool_name
+        algorithm_tool.__doc__ = tool_def.description
+
+        # Register the tool with the server
+        mcp.tool(algorithm_tool)
+    else:
+        # Fallback for tools without specs
+        async def algorithm_tool(parameters: Dict[str, Any] = None) -> str:
+            """Execute algorithm tool with parameters dictionary"""
+            try:
+                result = handler.execute(parameters or {})
+                return serialize_result(result)
+            except Exception as e:
+                return f"Error executing {tool_name}: {str(e)}"
+
+        algorithm_tool.__name__ = tool_name
+        algorithm_tool.__doc__ = (
+            f"Execute {tool_name} algorithm with parameters dictionary"
+        )
+        mcp.tool(algorithm_tool)
 
 
-def main(db_url: str, username: str, password: str, database: str = None):
-    """Main function that sets up and runs the FastMCP server"""
-    logger.info(f"Starting MCP Server for {db_url} with username {username}")
+def setup_server(
+    db_url: str, username: str, password: str, database: str = None
+) -> FastMCP:
+    """Set up the FastMCP server with all tools registered"""
+    logger.info(f"Setting up MCP Server for {db_url} with username {username}")
     if database:
         logger.info(f"Connecting to database: {database}")
 
@@ -142,6 +176,12 @@ def main(db_url: str, username: str, password: str, database: str = None):
     for tool_name in algorithm_names:
         create_algorithm_tool(mcp, tool_name, gds)
 
+    return mcp
+
+
+def main(db_url: str, username: str, password: str, database: str = None):
+    """Main function that sets up and runs the FastMCP server"""
+    mcp = setup_server(db_url, username, password, database)
     # Run the server - FastMCP will handle the event loop
     mcp.run()
 
