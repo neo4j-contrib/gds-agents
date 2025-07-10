@@ -2,8 +2,6 @@ import logging
 
 from dotenv import load_dotenv
 
-from . import server
-import asyncio
 import argparse
 import os
 
@@ -43,14 +41,15 @@ def main():
     logging.info(f"Starting MCP Server for {args.db_url} with username {args.username}")
     if args.database:
         logging.info(f"Connecting to database: {args.database}")
-    asyncio.run(
-        server.main(
-            db_url=args.db_url,
-            username=args.username,
-            password=args.password,
-            database=args.database,
-        )
+    
+    # Import and run the server directly without asyncio.run
+    from .server import main as server_main
+    server_main(
+        db_url=args.db_url,
+        username=args.username,
+        password=args.password,
+        database=args.database,
     )
 
 
-__all__ = ["main", "server"]
+__all__ = ["main"]

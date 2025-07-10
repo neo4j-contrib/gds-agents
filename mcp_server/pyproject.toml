@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "graphdatascience>=1.14",
-    "mcp[cli]>=1.5.0",
+    "fastmcp>=2.10.4",
 ]
 
 [build-system]
@@ -22,5 +22,5 @@ target-version = "py311"
 [dependency-groups]
 dev = [
     "ruff>=0.12.2",
-    "pytest>=8.4.1"
+    "pytest>=8.4.1",
 ]
