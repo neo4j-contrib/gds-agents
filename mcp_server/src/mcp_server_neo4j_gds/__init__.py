@@ -41,9 +41,10 @@ def main():
     logging.info(f"Starting MCP Server for {args.db_url} with username {args.username}")
     if args.database:
         logging.info(f"Connecting to database: {args.database}")
-    
+
     # Import and run the server directly without asyncio.run
     from .server import main as server_main
+
     server_main(
         db_url=args.db_url,
         username=args.username,

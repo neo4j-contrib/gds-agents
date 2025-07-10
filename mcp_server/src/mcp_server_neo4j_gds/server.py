@@ -45,7 +45,7 @@ def serialize_result(result: Any) -> str:
 
 def create_algorithm_tool(mcp: FastMCP, tool_name: str, gds: GraphDataScience):
     """Create and register an algorithm tool with proper closure"""
-    
+
     async def algorithm_tool(parameters: Dict[str, Any] = None) -> str:
         """Execute algorithm tool with parameters dictionary"""
         try:
@@ -54,11 +54,11 @@ def create_algorithm_tool(mcp: FastMCP, tool_name: str, gds: GraphDataScience):
             return serialize_result(result)
         except Exception as e:
             return f"Error executing {tool_name}: {str(e)}"
-    
+
     # Set the function name and docstring
     algorithm_tool.__name__ = tool_name
     algorithm_tool.__doc__ = f"Execute {tool_name} algorithm with parameters dictionary"
-    
+
     # Register the tool with the server
     mcp.tool(algorithm_tool)
 
@@ -98,48 +98,46 @@ def main(db_url: str, username: str, password: str, database: str = None):
     async def list_tools() -> str:
         """List all available tools in MCP Tool format"""
         tools_list = []
-        
+
         # Add basic tools
-        tools_list.append({
-            "name": "count_nodes_tool",
-            "description": "Count the number of nodes in the graph",
-            "inputSchema": {
-                "type": "object",
-                "properties": {},
-                "required": []
+        tools_list.append(
+            {
+                "name": "count_nodes_tool",
+                "description": "Count the number of nodes in the graph",
+                "inputSchema": {"type": "object", "properties": {}, "required": []},
             }
-        })
-        
-        tools_list.append({
-            "name": "get_node_properties_keys_tool", 
-            "description": "Get all node properties keys in the database",
-            "inputSchema": {
-                "type": "object",
-                "properties": {},
-                "required": []
+        )
+
+        tools_list.append(
+            {
+                "name": "get_node_properties_keys_tool",
+                "description": "Get all node properties keys in the database",
+                "inputSchema": {"type": "object", "properties": {}, "required": []},
             }
-        })
-        
+        )
+
         # Add algorithm tools from existing specs
         all_tool_definitions = (
-            centrality_tool_definitions + 
-            community_tool_definitions + 
-            path_tool_definitions + 
-            similarity_tool_definitions
+            centrality_tool_definitions
+            + community_tool_definitions
+            + path_tool_definitions
+            + similarity_tool_definitions
         )
-        
+
         for tool_def in all_tool_definitions:
-            tools_list.append({
-                "name": tool_def.name,
-                "description": tool_def.description,
-                "inputSchema": tool_def.inputSchema
-            })
-        
+            tools_list.append(
+                {
+                    "name": tool_def.name,
+                    "description": tool_def.description,
+                    "inputSchema": tool_def.inputSchema,
+                }
+            )
+
         return json.dumps(tools_list, indent=2)
 
     # Get all algorithm names from the registry
     algorithm_names = list(AlgorithmRegistry._handlers.keys())
-    
+
     # Create individual tool functions for each algorithm
     for tool_name in algorithm_names:
         create_algorithm_tool(mcp, tool_name, gds)
@@ -152,10 +150,10 @@ if __name__ == "__main__":
     import argparse
     import os
     from dotenv import load_dotenv
-    
+
     # Load environment variables
     load_dotenv("../../../.env")
-    
+
     parser = argparse.ArgumentParser(description="Neo4j GDS MCP Server")
     parser.add_argument(
         "--db-url", default=os.environ.get("NEO4J_URI"), help="URL to Neo4j database"
@@ -177,7 +175,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -186,11 +184,11 @@ if __name__ == "__main__":
             logging.StreamHandler(),
         ],
     )
-    
+
     logging.info(f"Starting MCP Server for {args.db_url} with username {args.username}")
     if args.database:
         logging.info(f"Connecting to database: {args.database}")
-    
+
     main(
         db_url=args.db_url,
         username=args.username,
