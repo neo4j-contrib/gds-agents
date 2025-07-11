@@ -14,12 +14,14 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class DijkstraShortestPathHandler(AlgorithmHandler):
-    def find_shortest_path(self, start_node: str, end_node: str, **kwargs):
-        query = """
+    def find_shortest_path(
+        self, start_node: str, end_node: str, node_identifier_property: str, **kwargs
+    ):
+        query = f"""
         MATCH (start)
-        WHERE toLower(start.name) CONTAINS toLower($start_name)
+        WHERE toLower(start.{node_identifier_property}) CONTAINS toLower($start_name)
         MATCH (end)
-        WHERE toLower(end.name) CONTAINS toLower($end_name)
+        WHERE toLower(end.{node_identifier_property}) CONTAINS toLower($end_name)
         RETURN id(start) as start_id, id(end) as end_id
         """
 
@@ -74,15 +76,18 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
         return self.find_shortest_path(
             arguments.get("start_node"),
             arguments.get("end_node"),
+            arguments.get("nodeIdentifierProperty"),
             relationshipWeightProperty=arguments.get("relationship_property"),
         )
 
 
 class DeltaSteppingShortestPathHandler(AlgorithmHandler):
-    def delta_stepping_shortest_path(self, source_node: str, **kwargs):
-        query = """
+    def delta_stepping_shortest_path(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
+        query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -132,16 +137,19 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.delta_stepping_shortest_path(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             delta=arguments.get("delta"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
-    def dijkstra_single_source_shortest_path(self, source_node: str, **kwargs):
-        query = """
+    def dijkstra_single_source_shortest_path(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
+        query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -191,17 +199,24 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.dijkstra_single_source_shortest_path(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class AStarShortestPathHandler(AlgorithmHandler):
-    def a_star_shortest_path(self, source_node: str, target_node: str, **kwargs):
-        query = """
+    def a_star_shortest_path(
+        self,
+        source_node: str,
+        target_node: str,
+        node_identifier_property: str,
+        **kwargs,
+    ):
+        query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         MATCH (target)
-        WHERE toLower(target.name) CONTAINS toLower($target_name)
+        WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
         RETURN id(source) as source_id, id(target) as target_id
         """
 
@@ -255,6 +270,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         return self.a_star_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
+            arguments.get("nodeIdentifierProperty"),
             latitudeProperty=arguments.get("latitudeProperty"),
             longitudeProperty=arguments.get("longitudeProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -262,12 +278,18 @@ class AStarShortestPathHandler(AlgorithmHandler):
 
 
 class YensShortestPathsHandler(AlgorithmHandler):
-    def yens_shortest_paths(self, source_node: str, target_node: str, **kwargs):
-        query = """
+    def yens_shortest_paths(
+        self,
+        source_node: str,
+        target_node: str,
+        node_identifier_property: str,
+        **kwargs,
+    ):
+        query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         MATCH (target)
-        WHERE toLower(target.name) CONTAINS toLower($target_name)
+        WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
         RETURN id(source) as source_id, id(target) as target_id
         """
 
@@ -337,16 +359,19 @@ class YensShortestPathsHandler(AlgorithmHandler):
         return self.yens_shortest_paths(
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
+            arguments.get("nodeIdentifierProperty"),
             k=arguments.get("k"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
-    def minimum_weight_spanning_tree(self, source_node: str, **kwargs):
-        query = """
+    def minimum_weight_spanning_tree(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
+        query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -408,6 +433,7 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.minimum_weight_spanning_tree(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             objective=arguments.get("objective"),
         )
@@ -449,12 +475,16 @@ class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
 
 class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
     def minimum_directed_steiner_tree(
-        self, source_node: str, target_nodes: list, **kwargs
+        self,
+        source_node: str,
+        target_nodes: list,
+        node_identifier_property: str,
+        **kwargs,
     ):
         # Find source node ID
-        source_query = """
+        source_query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -473,10 +503,10 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
         unmatched_targets = []
 
         for target_name in target_nodes:
-            target_query = """
+            target_query = f"""
             MATCH (target)
-            WHERE toLower(target.name) CONTAINS toLower($target_name)
-            RETURN id(target) as target_id, target.name as target_name
+            WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
+            RETURN id(target) as target_id, target.{node_identifier_property} as target_name
             """
 
             target_df = self.gds.run_cypher(
@@ -554,6 +584,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
         return self.minimum_directed_steiner_tree(
             arguments.get("sourceNode"),
             arguments.get("targetNodes"),
+            arguments.get("nodeIdentifierProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             delta=arguments.get("delta"),
             applyRerouting=arguments.get("applyRerouting"),
@@ -696,10 +727,17 @@ class RandomWalkHandler(AlgorithmHandler):
         # Process source nodes if provided
         source_node_ids = []
         if "sourceNodes" in kwargs and kwargs["sourceNodes"]:
+            node_identifier_property = kwargs.get("nodeIdentifierProperty")
+            if not node_identifier_property:
+                return {
+                    "found": False,
+                    "message": "nodeIdentifierProperty is required when sourceNodes are provided",
+                }
+
             for source_name in kwargs["sourceNodes"]:
-                source_query = """
+                source_query = f"""
                 MATCH (source)
-                WHERE toLower(source.name) CONTAINS toLower($source_name)
+                WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
                 RETURN id(source) as source_id
                 """
 
@@ -755,6 +793,7 @@ class RandomWalkHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.random_walk(
             sourceNodes=arguments.get("sourceNodes"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             walkLength=arguments.get("walkLength"),
             walksPerNode=arguments.get("walksPerNode"),
             inOutFactor=arguments.get("inOutFactor"),
@@ -765,11 +804,13 @@ class RandomWalkHandler(AlgorithmHandler):
 
 
 class BreadthFirstSearchHandler(AlgorithmHandler):
-    def breadth_first_search(self, source_node: str, **kwargs):
+    def breadth_first_search(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
         # Find source node ID
-        source_query = """
+        source_query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -786,9 +827,9 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
         target_node_ids = []
         if "targetNodes" in kwargs and kwargs["targetNodes"]:
             for target_name in kwargs["targetNodes"]:
-                target_query = """
+                target_query = f"""
                 MATCH (target)
-                WHERE toLower(target.name) CONTAINS toLower($target_name)
+                WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
                 RETURN id(target) as target_id
                 """
 
@@ -852,17 +893,20 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.breadth_first_search(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth"),
         )
 
 
 class DepthFirstSearchHandler(AlgorithmHandler):
-    def depth_first_search(self, source_node: str, **kwargs):
+    def depth_first_search(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
         # Find source node ID
-        source_query = """
+        source_query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -879,9 +923,9 @@ class DepthFirstSearchHandler(AlgorithmHandler):
         target_node_ids = []
         if "targetNodes" in kwargs and kwargs["targetNodes"]:
             for target_name in kwargs["targetNodes"]:
-                target_query = """
+                target_query = f"""
                 MATCH (target)
-                WHERE toLower(target.name) CONTAINS toLower($target_name)
+                WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
                 RETURN id(target) as target_id
                 """
 
@@ -945,17 +989,20 @@ class DepthFirstSearchHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.depth_first_search(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth"),
         )
 
 
 class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
-    def bellman_ford_single_source_shortest_path(self, source_node: str, **kwargs):
+    def bellman_ford_single_source_shortest_path(
+        self, source_node: str, node_identifier_property: str, **kwargs
+    ):
         # Find source node ID
-        source_query = """
+        source_query = f"""
         MATCH (source)
-        WHERE toLower(source.name) CONTAINS toLower($source_name)
+        WHERE toLower(source.{node_identifier_property}) CONTAINS toLower($source_name)
         RETURN id(source) as source_id
         """
 
@@ -1050,6 +1097,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.bellman_ford_single_source_shortest_path(
             arguments.get("sourceNode"),
+            arguments.get("nodeIdentifierProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 

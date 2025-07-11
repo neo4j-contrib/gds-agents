@@ -50,40 +50,51 @@ async def main(db_url: str, username: str, password: str, database: str = None):
     if database:
         logger.info(f"Connecting to database: {database}")
 
-    server = Server("example-server")
+    server = Server("gds-agent")
 
     # Create GraphDataScience object with optional database parameter
-    if database:
-        gds = GraphDataScience(
-            db_url, auth=(username, password), aura_ds=False, database=database
-        )
-    else:
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
+    try:
+        if database:
+            gds = GraphDataScience(
+                db_url, auth=(username, password), aura_ds=False, database=database
+            )
+        else:
+            gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
+        logger.info("Successfully connected to Neo4j database")
+    except Exception as e:
+        logger.error(f"Failed to connect to Neo4j database: {e}")
+        raise
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
         """List available tools"""
-        return (
-            [
-                types.Tool(
-                    name="count_nodes",
-                    description="""Count the number of nodes in the graph""",
-                    inputSchema={
-                        "type": "object",
-                    },
-                ),
-                types.Tool(
-                    name="get_node_properties_keys",
-                    description="""Get all node properties keys in the database""",
-                    inputSchema={
-                        "type": "object",
-                    },
-                ),
-            ]
-            + centrality_tool_definitions
-            + community_tool_definitions
-            + path_tool_definitions
-        )
+        try:
+            tools = (
+                [
+                    types.Tool(
+                        name="count_nodes",
+                        description="""Count the number of nodes in the graph""",
+                        inputSchema={
+                            "type": "object",
+                        },
+                    ),
+                    types.Tool(
+                        name="get_node_properties_keys",
+                        description="""Get all node properties keys in the database""",
+                        inputSchema={
+                            "type": "object",
+                        },
+                    ),
+                ]
+                + centrality_tool_definitions
+                + community_tool_definitions
+                + path_tool_definitions
+            )
+            logger.info(f"Returning {len(tools)} tools")
+            return tools
+        except Exception as e:
+            logger.error(f"Error in handle_list_tools: {e}")
+            raise
 
     @server.call_tool()
     async def handle_call_tool(
@@ -125,3 +136,21 @@ async def main(db_url: str, username: str, password: str, database: str = None):
     finally:
         logger.info("Closing GDS connection as MCP server is shutting down.")
         gds.close()
+
+
+if __name__ == "__main__":
+    import sys
+    import asyncio
+
+    if len(sys.argv) < 4:
+        print(
+            "Usage: python -m mcp_server_neo4j_gds.server <db_url> <username> <password> [database]"
+        )
+        sys.exit(1)
+
+    db_url = sys.argv[1]
+    username = sys.argv[2]
+    password = sys.argv[3]
+    database = sys.argv[4] if len(sys.argv) > 4 else None
+
+    asyncio.run(main(db_url, username, password, database))

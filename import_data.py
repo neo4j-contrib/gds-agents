@@ -21,29 +21,27 @@ def import_tube_data(uri, username, password, data_file):
         
         session.run("""
         UNWIND $stations AS station
-        CREATE (s:UndergroundStation {
-            id: station.id,
-            name: station.name,
-            display_name: CASE station.display_name 
+        MERGE (s:UndergroundStation {id: station.id})
+        SET s.name = station.name,
+            s.display_name = CASE station.display_name 
                          WHEN 'NULL' THEN station.name 
                          ELSE station.display_name 
                          END,
-            latitude: toFloat(station.latitude),
-            longitude: toFloat(station.longitude),
-            zone: CASE 
+            s.latitude = toFloat(station.latitude),
+            s.longitude = toFloat(station.longitude),
+            s.zone = CASE 
                   WHEN station.zone CONTAINS '.' THEN toFloat(station.zone)
                   ELSE toInteger(station.zone)
                   END,
-            total_lines: toInteger(station.total_lines),
-            rail: toInteger(station.rail)
-        })
+            s.total_lines = toInteger(station.total_lines),
+            s.rail = toInteger(station.rail)
         """, {'stations': data['stations']})
         
         session.run("""
         UNWIND $connections AS conn
         MATCH (s1:UndergroundStation {id: conn.station1})
         MATCH (s2:UndergroundStation {id: conn.station2})
-        CREATE (s1)-[r:LINK {
+        MERGE (s1)-[r:LINK {
             line: conn.line,
             time: toInteger(conn.time),
             distance: toInteger(conn.time)
