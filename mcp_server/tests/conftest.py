@@ -6,7 +6,6 @@ import pytest_asyncio
 import asyncio
 import json
 import sys
-import signal
 import atexit
 from neo4j import GraphDatabase
 from pathlib import Path
@@ -45,8 +44,6 @@ def is_neo4j_responsive(url):
     try:
         driver = GraphDatabase.driver(url, auth=(NEO4J_USER, NEO4J_PASSWORD))
         with driver.session() as session:
-            result = session.run("RETURN 1 as test")
-            # Also check if GDS is available
             gds_check = session.run("RETURN gds.version()")
             print(gds_check.single()["gds.version()"])
         driver.close()
