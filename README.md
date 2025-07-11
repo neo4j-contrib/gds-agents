@@ -1,11 +1,18 @@
-# gds-agents
+# GDS Agent
 
 Neither LLMs nor any existing toolings (MCP Servers) are capable of complex reasoning on graphs at the moment.
-By reasoning on graphs, we mean the ability to decide and accurate execute the appropriate parameterised graph algorithms over large heterogeneous attributed graphs.
 
 This MCP Server includes toolings from Neo4j Graph Data Science (GDS) library, which allows you to run all common graph algorithms.
 
-Once the server is running, you are able to **ask any graph questions about your Neo4j graph** and get answers.
+Once the server is running, you are able to **ask any graph questions about your Neo4j graph** and get answers. LLMs equipped with GDS agent can decide and accurately execute the appropriate parameterised graph algorithms over the graph you have in your Neo4j database.
+
+# Table of Contents
+
+- [Setup](#setup)
+- [Start the server](#start-the-server)
+- [Example usage](#example-usage)
+- [How to contribute](#how-to-contribute)
+- [Feature request and bug reports](#feature-request-and-bug-reports)
 
 
 # Setup
@@ -101,3 +108,25 @@ It finds and executes the algorithms with appropriate parameters. Intermediate o
 ...
 
 ```
+
+# How to contribute
+Open a pull request from a branch of your forked repository into the main branch of this repo, for example `mygithubid:add-new-algo -> neo4j-contrib:main`.
+
+The CI build in github action requires all codestyle checks and tests to pass.
+
+To run and fix codestyle checks locally, in the `/mcp_server` directory, run:
+```bash
+uv sync --dev
+```
+to setup the python environment. And then,
+```bash
+uv run pytest tests -v -s
+uv run ruff check
+uv run ruff format
+```
+for all tests and codestyle fixes.
+
+# Feature request and bug reports
+To report a bug or a new feature request, raise an issue.
+If it is a bug, include the full stacktrace and errors.
+When available, attach relevant logs in `mcp_server_neo4j_gds.log` under your `src/mcp_server_neo4j_gds`, and relevant minimal dataset that can be used to reproduce the prboem.
