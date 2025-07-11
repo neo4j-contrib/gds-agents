@@ -15,12 +15,16 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the ending node",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "relationship_property": {
                     "type": "string",
                     "description": "Property of the relationship to use for path finding",
                 },
             },
-            "required": ["start_node", "end_node"],
+            "required": ["start_node", "end_node", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -37,6 +41,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the source node to find shortest paths from.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "delta": {
                     "type": "number",
                     "description": "The bucket width for grouping nodes with the same tentative distance to the source node.",
@@ -46,7 +54,7 @@ path_tool_definitions = [
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -62,12 +70,16 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the source node to find shortest paths from.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -93,6 +105,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the target node to find shortest path to.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "latitudeProperty": {
                     "type": "string",
                     "description": "The node property that stores the latitude value.",
@@ -106,7 +122,7 @@ path_tool_definitions = [
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode", "targetNode"],
+            "required": ["sourceNode", "targetNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -132,6 +148,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the target node to find shortest paths to.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "k": {
                     "type": "integer",
                     "description": "The number of shortest paths to compute between source and target node.",
@@ -141,7 +161,7 @@ path_tool_definitions = [
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode", "targetNode"],
+            "required": ["sourceNode", "targetNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -160,6 +180,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the starting source node.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
@@ -170,7 +194,7 @@ path_tool_definitions = [
                     "description": "If specified, the parameter dictates whether to find the minimum or the maximum weight spanning tree. By default, a minimum weight spanning tree is returned. Permitted values are 'minimum' and 'maximum'.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -231,6 +255,10 @@ path_tool_definitions = [
                     "items": {"type": "string"},
                     "description": "List of target node names to connect in the steiner tree.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
@@ -244,7 +272,7 @@ path_tool_definitions = [
                     "description": "If specified, the algorithm will try to improve the outcome via an additional post-processing heuristic.",
                 },
             },
-            "required": ["sourceNode", "targetNodes"],
+            "required": ["sourceNode", "targetNodes", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -314,6 +342,10 @@ path_tool_definitions = [
                     "items": {"type": "string"},
                     "description": "The list of nodes from which to do a random walk.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "walkLength": {
                     "type": "integer",
                     "description": "The number of steps in a single random walk.",
@@ -356,6 +388,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the starting source node.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "targetNodes": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -366,7 +402,7 @@ path_tool_definitions = [
                     "description": "The maximum distance from the source node at which nodes are visited.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -383,6 +419,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the starting source node.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "targetNodes": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -393,7 +433,7 @@ path_tool_definitions = [
                     "description": "The maximum distance from the source node at which nodes are visited.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(
@@ -416,12 +456,16 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the starting source node.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode"],
+            "required": ["sourceNode", "nodeIdentifierProperty"],
         },
     ),
     types.Tool(

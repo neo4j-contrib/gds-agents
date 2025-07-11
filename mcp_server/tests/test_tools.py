@@ -9,6 +9,7 @@ async def test_find_shortest_path(mcp_client):
         {
             "start_node": "Canada Water",
             "end_node": "Tower Hill",
+            "nodeIdentifierProperty": "name",
             "relationship_property": "time",
         },
     )
@@ -41,7 +42,11 @@ async def test_find_shortest_path(mcp_client):
     # Test with stations that should not have a path
     result = await mcp_client.call_tool(
         "find_shortest_path",
-        {"start_node": "NonExistentStation1", "end_node": "NonExistentStation2"},
+        {
+            "start_node": "NonExistentStation1",
+            "end_node": "NonExistentStation2",
+            "nodeIdentifierProperty": "name",
+        },
     )
 
     result_text = result[0]["text"]

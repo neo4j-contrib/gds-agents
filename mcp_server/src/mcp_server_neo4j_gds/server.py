@@ -50,7 +50,7 @@ async def main(db_url: str, username: str, password: str, database: str = None):
     if database:
         logger.info(f"Connecting to database: {database}")
 
-    server = Server("example-server")
+    server = Server("gds-agent")
 
     # Create GraphDataScience object with optional database parameter
     try:
