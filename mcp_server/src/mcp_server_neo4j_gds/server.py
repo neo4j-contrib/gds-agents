@@ -15,11 +15,6 @@ from .registry import AlgorithmRegistry
 from .gds import count_nodes, get_node_properties_keys
 
 logger = logging.getLogger("mcp_server_neo4j_gds")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
-)
 
 
 def serialize_result(result: Any) -> str:

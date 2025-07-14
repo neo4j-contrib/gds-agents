@@ -6,11 +6,6 @@ from graphdatascience import GraphDataScience
 from .algorithm_handler import AlgorithmHandler
 from .gds import projected_graph
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("mcp_server_neo4j_gds.log"), logging.StreamHandler()],
-)
 logger = logging.getLogger("mcp_server_neo4j_gds")
 
 

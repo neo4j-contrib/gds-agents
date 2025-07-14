@@ -1,11 +1,38 @@
 import logging
+import os
+import platform
 
 from dotenv import load_dotenv
 
 from . import server
 import asyncio
 import argparse
-import os
+
+
+def get_log_file_path():
+    """Get the appropriate log file path based on the environment."""
+    current_dir = os.getcwd()
+    
+    # Check if we're in development (project directory has pyproject.toml or src/)
+    if os.path.exists(os.path.join(current_dir, "pyproject.toml")) or os.path.exists(os.path.join(current_dir, "src")):
+        return "mcp-server-neo4j-gds.log"
+    
+    # Production: use platform-specific Claude logs directory
+    system = platform.system()
+    home = os.path.expanduser("~")
+    
+    if system == "Darwin":  # macOS
+        claude_logs_dir = os.path.join(home, "Library", "Logs", "Claude")
+    elif system == "Windows":
+        claude_logs_dir = os.path.join(os.environ.get("APPDATA", home), "Claude", "Logs")
+    else:  # Linux and other Unix-like systems
+        claude_logs_dir = os.path.join(home, ".local", "share", "Claude", "logs")
+    
+    # Use Claude logs directory if it exists, otherwise fall back to current directory
+    if os.path.exists(claude_logs_dir):
+        return os.path.join(claude_logs_dir, "mcp-server-neo4j-gds.log")
+    else:
+        return "mcp-server-neo4j-gds.log"
 
 
 def main():
@@ -32,14 +59,17 @@ def main():
     )
 
     args = parser.parse_args()
+    
+    log_file = get_log_file_path()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler("mcp_server_neo4j_gds.log"),
+            logging.FileHandler(log_file),
             logging.StreamHandler(),
         ],
     )
+    
     logging.info(f"Starting MCP Server for {args.db_url} with username {args.username}")
     if args.database:
         logging.info(f"Connecting to database: {args.database}")
