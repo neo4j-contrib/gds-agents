@@ -7,7 +7,7 @@
         "run",
         "--directory",
         "src/mcp_server_neo4j_gds",
-        "mcp-neo4j-gds"
+        "gds-agent"
       ]
     }
   }
