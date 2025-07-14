@@ -6,9 +6,6 @@ This MCP Server includes toolings from Neo4j Graph Data Science (GDS) library, w
 
 Once the server is running, you are able to **ask any graph questions about your Neo4j graph** and get answers. LLMs equipped with GDS agent can decide and accurately execute the appropriate parameterised graph algorithms over the graph you have in your Neo4j database.
 
-An example where an LLM with GDS Agent is able to pick shortest path and Yen's algorithm to answer my question about travel plan:
-![gds-agent-example](doc/gds-agent-london-underground-example.png)
-
 
 # Usage guide
 If you have `uvx` [installed](https://docs.astral.sh/uv/getting-started/installation/), add the following config to your `claude_desktop_config.json`
