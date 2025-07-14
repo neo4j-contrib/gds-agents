@@ -22,7 +22,7 @@ An example where an LLM with GDS Agent is able to pick shortest path and Yen's a
 
 
 # Use GDS Agent
-If you have `uvx` install, add the following config to your `claude_desktop_config.json`
+If you have `uvx` [installed](https://docs.astral.sh/uv/getting-started/installation/), add the following config to your `claude_desktop_config.json`
 ```
 {
     "mcpServers": {
@@ -52,8 +52,8 @@ To load the London underground example dataset:
    Create a new database and start it
 4. Populate .env file with necessary credentials:
    ```bash
-   NEO4J_URI=bolt://localhost:7687  # or other database URL if running in Aura
-   NEO4J_USERNAME=neo4j  # or other customer name
+   NEO4J_URI=bolt://localhost:7687  # or your database URI
+   NEO4J_USERNAME=neo4j  # or your db username
    NEO4J_PASSWORD=your_password
    ```
 5. Load the London Underground dataset with the following command:
@@ -66,7 +66,7 @@ you should see:
 
 
 # Start the server for dev
-1. When inside the `/mcp_server` folder, run `uv sync --dev` and run `uv run gds-agent` to start the MCP server standalone, or run `claude` to start claude-cli with the agent.
+1. When inside the `/mcp_server` directory, run `uv sync --dev` and run `uv run gds-agent` to start the MCP server standalone, or run `claude` to start claude-cli with the agent.
 
 
 # How to contribute

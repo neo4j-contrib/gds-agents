@@ -5,32 +5,6 @@ import logging
 import os
 import platform
 
-"""
-Graph Data Science (GDS) utilities for Neo4j.
-
-This module provides graph projection functionality that supports both directed and undirected graphs.
-Some algorithms work better or are specifically designed for undirected graphs:
-
-Algorithms that use UNDIRECTED graphs:
-- Betweenness Centrality (better results on undirected graphs)
-- Louvain Community Detection
-- Leiden Community Detection  
-- Label Propagation
-- Local Clustering Coefficient
-- Minimum Weight Spanning Tree
-- K-Spanning Tree
-
-Algorithms that use DIRECTED graphs (default):
-- PageRank
-- ArticleRank
-- HITS
-- Dijkstra Shortest Path
-- Most other path algorithms
-- Most centrality algorithms
-
-The projected_graph function now accepts an 'undirected' parameter to control graph orientation.
-"""
-
 
 def get_log_file_path():
     """Get the appropriate log file path based on the environment."""
