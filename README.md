@@ -19,7 +19,7 @@ An example where an LLM with GDS Agent is able to pick shortest path and Yen's a
 - [Start the server](#start-the-server)
 - [How to contribute](#how-to-contribute)
 - [Feature request and bug reports](#feature-request-and-bug-reports)
-
+- [Additional resource](#additional-resources)
 
 # Use GDS Agent
 If you have `uvx` [installed](https://docs.astral.sh/uv/getting-started/installation/), add the following config to your `claude_desktop_config.json`
@@ -90,3 +90,6 @@ for all tests and codestyle fixes.
 To report a bug or a new feature request, raise an issue.
 If it is a bug, include the full stacktrace and errors.
 When available, attach relevant logs in `mcp_server_neo4j_gds.log`. This file is located inside the `/mcp_server/src_mcp_server_neo4j_gds` directory if the gds agent is running from source, or inside the logging path for Claude (e.g `/Library/Logs/Claude` for Claude Desktop on Mac). Include relevant minimal dataset that can be used to reproduce the issue if possible.
+
+# Additional resources
+The GDS agent can be used with other MCP servers, such as those that provide additional Neo4j toolings: https://github.com/neo4j-contrib/mcp-neo4j
