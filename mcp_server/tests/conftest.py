@@ -164,6 +164,7 @@ async def mcp_server_process(import_test_data):
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        limit=1024 * 1024 * 10,  # 10MB buffer limit
     )
 
     # Wait a moment for the server to initialize
@@ -210,7 +211,15 @@ class MCPClient:
         response_line = await self.process.stdout.readline()
         if not response_line:
             raise RuntimeError("No response from MCP server")
-        response = json.loads(response_line.decode().strip())
+
+        # Decode with error handling for large responses
+        try:
+            response_text = response_line.decode().strip()
+            response = json.loads(response_text)
+        except UnicodeDecodeError as e:
+            raise RuntimeError(f"Failed to decode response: {e}")
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse JSON response: {e}")
 
         return response
 
