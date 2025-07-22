@@ -4,5 +4,9 @@
 1. Project all (non-string) node properties using the appropriate (integer/float) types.
 
 
-### Bug Fixies
-1. Fix wrong GDS call for path algorithms (delta_stepping_shortest_path, dijkstra_single_source_shortest_path, a_star_shortest_path).
+### Bug Fixes
+1. Fix wrong GDS call for path algorithms.
+
+
+### Other Changes
+1. Removed minimum_weight_k_spanning_tree since it is write mode only, which may modify the database unexpectedly.

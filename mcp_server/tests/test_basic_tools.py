@@ -61,7 +61,6 @@ async def test_list_tools(mcp_client):
         "a_star_shortest_path",
         "yens_shortest_paths",
         "minimum_weight_spanning_tree",
-        "minimum_weight_k_spanning_tree",
         "minimum_directed_steiner_tree",
         "prize_collecting_steiner_tree",
         "all_pairs_shortest_paths",

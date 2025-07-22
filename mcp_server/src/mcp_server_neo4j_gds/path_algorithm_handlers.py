@@ -475,40 +475,6 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
         )
 
 
-class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
-    def minimum_weight_k_spanning_tree(self, write_property: str, k: int, **kwargs):
-        with projected_graph(self.gds, undirected=True) as G:
-            # If any optional parameter is not None, use that parameter
-            params = {k: v for k, v in kwargs.items() if v is not None}
-            logger.info(f"Minimum Weight K-Spanning Tree parameters: {params}")
-
-            # Run the k-spanning tree algorithm
-            result = self.gds.kSpanningTree.write(
-                G, writeProperty=write_property, k=k, **params
-            )
-
-            # The write procedure returns performance metrics and effectiveNodeCount
-            # The results are written to the database with the specified writeProperty
-            return {
-                "found": True,
-                "writeProperty": write_property,
-                "k": k,
-                "effectiveNodeCount": int(result["effectiveNodeCount"]),
-                "preProcessingMillis": int(result["preProcessingMillis"]),
-                "computeMillis": int(result["computeMillis"]),
-                "writeMillis": int(result["writeMillis"]),
-                "message": f"K-spanning tree with {result['effectiveNodeCount']} nodes written to property '{write_property}'",
-            }
-
-    def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.minimum_weight_k_spanning_tree(
-            arguments.get("writeProperty"),
-            arguments.get("k"),
-            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
-            objective=arguments.get("objective"),
-        )
-
-
 class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
     def minimum_directed_steiner_tree(
         self,
