@@ -5,7 +5,7 @@
 
 
 ### Bug Fixes
-1. Fix wrong GDS call for path algorithms.
+1. Fix GDS call for path algorithms and clean up returned data format.
 
 
 ### Other Changes
