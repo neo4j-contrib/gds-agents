@@ -5,4 +5,4 @@
 
 
 ### Bug Fixies
-1. Fix wrong GDS call for delta stepping shortest path.
+1. Fix wrong GDS call for path algorithms (delta_stepping_shortest_path, dijkstra_single_source_shortest_path, a_star_shortest_path).

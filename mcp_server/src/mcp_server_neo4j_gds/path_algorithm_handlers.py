@@ -180,7 +180,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
 
-            path_data = self.gds.shortestPath.dijkstra.stream(
+            path_data = self.gds.allShortestPaths.dijkstra.stream(
                 G, sourceNode=source_node_id, **params
             )
 
@@ -193,22 +193,41 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
             # Convert to native Python types as needed
             result_data = []
             for _, row in path_data.iterrows():
-                node_id = int(row["targetNode"])
-                cost = float(row["cost"])
+                target_node_id = int(row["targetNode"])
+                total_cost = float(row["totalCost"])
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
+                # Get the path details
+                node_ids = row["nodeIds"]
+                costs = row["costs"]
+                path = row["path"]
+
+                # Convert to native Python types if needed
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
+                if hasattr(costs, "tolist"):
+                    costs = costs.tolist()
+
+                # Get node names using GDS utility function
+                target_node_name = self.gds.util.asNode(target_node_id)
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
                 result_data.append(
-                    {"targetNodeId": node_id, "targetNodeName": node_name, "cost": cost}
+                    {
+                        "targetNode": target_node_id,
+                        "targetNodeName": target_node_name,
+                        "totalCost": total_cost,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "costs": costs,
+                        "path": path,
+                    }
                 )
 
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
                 "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
+                "results": result_data,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:

@@ -122,7 +122,13 @@ path_tool_definitions = [
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode", "targetNode", "nodeIdentifierProperty"],
+            "required": [
+                "sourceNode",
+                "targetNode",
+                "nodeIdentifierProperty",
+                "latitudeProperty",
+                "longitudeProperty",
+            ],
         },
     ),
     types.Tool(
