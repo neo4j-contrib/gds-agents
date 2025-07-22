@@ -198,3 +198,109 @@ async def test_a_star_shortest_path(mcp_client):
     result_text = result[0]["text"]
     result_data = json.loads(result_text)
     assert result_data["found"] is False
+
+
+@pytest.mark.asyncio
+async def test_yens_shortest_paths(mcp_client):
+    result = await mcp_client.call_tool(
+        "yens_shortest_paths",
+        {
+            "sourceNode": "Canada Water",
+            "targetNode": "Tower Hill",
+            "nodeIdentifierProperty": "name",
+            "relationshipWeightProperty": "time",
+            "k": 3,
+        },
+    )
+
+    assert len(result) == 1
+    result_text = result[0]["text"]
+    result_data = json.loads(result_text)
+
+    assert result_data["found"] is True
+    assert "sourceNodeId" in result_data
+    assert "targetNodeId" in result_data
+    assert "sourceNodeName" in result_data
+    assert "targetNodeName" in result_data
+    assert "results" in result_data
+    assert "totalResults" in result_data
+
+    assert "Canada Water" in result_data["sourceNodeName"]
+    assert "Tower Hill" in result_data["targetNodeName"]
+
+    results = result_data["results"]
+    assert 1 <= len(results) <= 3
+    assert result_data["totalResults"] == len(results)
+
+    first_result = results[0]
+    assert "index" in first_result
+    assert "totalCost" in first_result
+    assert "nodeIds" in first_result
+    assert "nodeNames" in first_result
+    assert "costs" in first_result
+    assert "path" in first_result
+
+    # First path should be the optimal path (same as basic shortest path)
+    assert first_result["totalCost"] == 9.0
+    expected_node_ids = [292, 188, 243, 196, 261, 2, 230]
+    assert first_result["nodeIds"] == expected_node_ids
+
+    # Test with non-existent stations
+    result = await mcp_client.call_tool(
+        "yens_shortest_paths",
+        {
+            "sourceNode": "NonExistentStation1",
+            "targetNode": "NonExistentStation2",
+            "nodeIdentifierProperty": "name",
+            "k": 2,
+        },
+    )
+
+    result_text = result[0]["text"]
+    result_data = json.loads(result_text)
+    assert result_data["found"] is False
+
+
+@pytest.mark.asyncio
+async def test_minimum_weight_spanning_tree(mcp_client):
+    result = await mcp_client.call_tool(
+        "minimum_weight_spanning_tree",
+        {
+            "sourceNode": "Canada Water",
+            "nodeIdentifierProperty": "name",
+            "relationshipWeightProperty": "time",
+        },
+    )
+
+    assert len(result) == 1
+    result_text = result[0]["text"]
+    result_data = json.loads(result_text)
+
+    assert result_data["found"] is True
+    assert "totalWeight" in result_data
+    assert "edges" in result_data
+
+    edges = result_data["edges"]
+    assert len(edges) == 301
+    assert result_data["totalWeight"] > 0
+
+    first_edge = edges[0]
+    assert "nodeId" in first_edge
+    assert "parentId" in first_edge
+    assert "nodeName" in first_edge
+    assert "parentName" in first_edge
+    assert "weight" in first_edge
+    assert first_edge["weight"] > 0
+
+    # Test with non-existent source node
+    result = await mcp_client.call_tool(
+        "minimum_weight_spanning_tree",
+        {
+            "sourceNode": "NonExistentStation",
+            "nodeIdentifierProperty": "name",
+        },
+    )
+
+    result_text = result[0]["text"]
+    result_data = json.loads(result_text)
+    assert result_data["found"] is False

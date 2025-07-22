@@ -385,8 +385,8 @@ class YensShortestPathsHandler(AlgorithmHandler):
                 "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "targetNodeId": target_node_id,
                 "targetNodeName": self.gds.util.asNode(target_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
+                "results": result_data,
+                "totalResults": len(result_data),
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -432,36 +432,38 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
+            edges = []
             total_weight = 0.0
 
             for _, row in mst_data.iterrows():
-                source_id = int(row["sourceNode"])
-                target_id = int(row["targetNode"])
-                weight = float(row["cost"])
+                node_id = int(row["nodeId"])
+                parent_id = int(row["parentId"])
+                weight = float(row["weight"])
+
+                # Skip the root node (where nodeId == parentId)
+                if node_id == parent_id:
+                    continue
+
                 total_weight += weight
 
                 # Get node names using GDS utility function
-                source_name = self.gds.util.asNode(source_id)
-                target_name = self.gds.util.asNode(target_id)
+                parent_name = self.gds.util.asNode(parent_id)
+                node_name = self.gds.util.asNode(node_id)
 
-                result_data.append(
+                edges.append(
                     {
-                        "sourceNodeId": source_id,
-                        "sourceNodeName": source_name,
-                        "targetNodeId": target_id,
-                        "targetNodeName": target_name,
-                        "cost": weight,
+                        "nodeId": node_id,
+                        "parentId": parent_id,
+                        "nodeName": node_name,
+                        "parentName": parent_name,
+                        "weight": weight,
                     }
                 )
 
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "totalWeight": total_weight,
-                "relationships": result_data,
-                "totalRelationships": len(result_data),
+                "edges": edges,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:

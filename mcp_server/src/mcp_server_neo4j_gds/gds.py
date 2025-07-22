@@ -114,8 +114,37 @@ def projected_graph(gds, undirected=False):
         )
         logger.info(f"Node property map: '{node_prop_map}'")
         # Configure graph projection based on undirected parameter
+        # Create data configuration (node/relationship structure)
+        data_config_parts = [
+            "sourceNodeLabels: labels(n)",
+            "targetNodeLabels: labels(m)",
+            "relationshipType: type(r)",
+        ]
+
+        if node_prop_map:
+            data_config_parts.extend(
+                [
+                    f"sourceNodeProperties: {{{node_prop_map}}}",
+                    f"targetNodeProperties: {{{node_prop_map}}}",
+                ]
+            )
+
+        if rel_prop_map:
+            data_config_parts.append(f"relationshipProperties: {{{rel_prop_map}}}")
+
+        data_config = ", ".join(data_config_parts)
+
+        # Create additional configuration
+        additional_config_parts = []
         if undirected:
-            # For undirected graphs, use undirectedRelationshipTypes: ['*'] to make all relationships undirected
+            additional_config_parts.append("undirectedRelationshipTypes: ['*']")
+
+        additional_config = (
+            ", ".join(additional_config_parts) if additional_config_parts else ""
+        )
+
+        # Use separate data and additional configuration parameters
+        if additional_config:
             G, _ = gds.graph.cypher.project(
                 f"""
                        MATCH (n)-[r]-(m)
@@ -124,21 +153,13 @@ def projected_graph(gds, undirected=False):
                            $graph_name,
                            n,
                            m,
-                           {{
-                           sourceNodeLabels: labels(n),
-                           targetNodeLabels: labels(m),
-                           sourceNodeProperties: {{{node_prop_map}}},
-                           targetNodeProperties: {{{node_prop_map}}},
-                           relationshipType: type(r),
-                           relationshipProperties: {{{rel_prop_map}}},
-                           undirectedRelationshipTypes: ['*']
-                       }}
+                           {{{data_config}}},
+                           {{{additional_config}}}
                        )
                        """,
                 graph_name=graph_name,
             )
         else:
-            # Default directed projection
             G, _ = gds.graph.cypher.project(
                 f"""
                        MATCH (n)-[r]-(m)
@@ -147,14 +168,7 @@ def projected_graph(gds, undirected=False):
                            $graph_name,
                            n,
                            m,
-                           {{
-                           sourceNodeLabels: labels(n),
-                           targetNodeLabels: labels(m),
-                           sourceNodeProperties: {{{node_prop_map}}},
-                           targetNodeProperties: {{{node_prop_map}}},
-                           relationshipType: type(r),
-                           relationshipProperties: {{{rel_prop_map}}}
-                       }}
+                           {{{data_config}}}
                        )
                        """,
                 graph_name=graph_name,
