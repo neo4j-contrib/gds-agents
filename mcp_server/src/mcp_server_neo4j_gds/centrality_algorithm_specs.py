@@ -8,14 +8,14 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodes": {
+                "nodeNames": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the ArticleRank for.",
+                    "description": "List of node names to return the ArticleRank for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "dampingFactor": {
                     "type": "number",
@@ -33,10 +33,8 @@ centrality_tool_definitions = [
                     "type": "string",
                     "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
-                # The signature takes node "names" STRING instead of nodeIds according to GDS doc.
-                # The "names" need to be resolved to actual nodes, using the property_key.
                 "sourceNodes": {
-                    "description": "The nodes or node ids or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
+                    "description": "The nodes or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
                     "anyOf": [
                         {"type": "string", "description": "Single node"},
                         {

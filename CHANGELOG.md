@@ -2,7 +2,7 @@
 
 ### New Features
 1. Project all (non-string) node properties using the appropriate (integer/float) types.
-
+2. Support personalisation and post-filtering in Article Rank.
 
 ### Bug Fixes
 1. Fix GDS call for path algorithms and clean up returned data format.
