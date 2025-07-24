@@ -283,9 +283,9 @@ class ClosenessCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.closeness_centrality(
-            nodes=arguments.get("nodes"), 
+            nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
-            useWassermanFaust=arguments.get("useWassermanFaust")
+            useWassermanFaust=arguments.get("useWassermanFaust"),
         )
 
 
@@ -330,8 +330,8 @@ class DegreeCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.degree_centrality(
-            nodes=arguments.get("nodes"), 
-            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+            nodes=arguments.get("nodes"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
@@ -341,7 +341,8 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
             params = {
                 k: v
                 for k, v in kwargs.items()
-                if v is not None and k not in ["nodes", "nodeIdentifierProperty", "sourceNodes"]
+                if v is not None
+                and k not in ["nodes", "nodeIdentifierProperty", "sourceNodes"]
             }
             node_identifier_property = kwargs.get("nodeIdentifierProperty")
             source_nodes = kwargs.get("sourceNodes", None)
@@ -438,7 +439,8 @@ class PageRankHandler(AlgorithmHandler):
             params = {
                 k: v
                 for k, v in kwargs.items()
-                if v is not None and k not in ["nodes", "nodeIdentifierProperty", "sourceNodes"]
+                if v is not None
+                and k not in ["nodes", "nodeIdentifierProperty", "sourceNodes"]
             }
             node_identifier_property = kwargs.get("nodeIdentifierProperty")
             source_nodes = kwargs.get("sourceNodes", None)
@@ -570,8 +572,8 @@ class HarmonicCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.harmonic_centrality(
-            nodes=arguments.get("nodes"), 
-            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+            nodes=arguments.get("nodes"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
