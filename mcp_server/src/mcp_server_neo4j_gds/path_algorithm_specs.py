@@ -122,7 +122,13 @@ path_tool_definitions = [
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
             },
-            "required": ["sourceNode", "targetNode", "nodeIdentifierProperty"],
+            "required": [
+                "sourceNode",
+                "targetNode",
+                "nodeIdentifierProperty",
+                "latitudeProperty",
+                "longitudeProperty",
+            ],
         },
     ),
     types.Tool(
@@ -195,39 +201,6 @@ path_tool_definitions = [
                 },
             },
             "required": ["sourceNode", "nodeIdentifierProperty"],
-        },
-    ),
-    types.Tool(
-        name="minimum_weight_k_spanning_tree",
-        description="Sometimes, we might require a spanning tree(a tree where its nodes are connected with each via a single path) that does not necessarily span all nodes in the graph. "
-        "The K-Spanning tree heuristic algorithm returns a tree with k nodes and k − 1 relationships. "
-        "Our heuristic processes the result found by Prim's algorithm for the Minimum Weight Spanning Tree problem. "
-        "Like Prim, it starts from a given source node, finds a spanning tree for all nodes and then removes nodes using heuristics to produce a tree with 'k' nodes. "
-        "Note that the source node will not be necessarily included in the final output as the heuristic tries to find a globally good tree. "
-        "The Minimum weight k-Spanning Tree is NP-Hard. The algorithm in the Neo4j GDS Library is therefore not guaranteed to find the optimal answer, but should hopefully return a good approximation in practice. "
-        "Like Prim algorithm, the algorithm focuses only on the component of the source node. If that component has fewer than k nodes, it will not look into other components, but will instead return the component.",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "writeProperty": {
-                    "type": "string",
-                    "description": "The node property in the Neo4j database to which the spanning tree is written.",
-                },
-                "k": {
-                    "type": "integer",
-                    "description": "The size of the tree to be returned.",
-                },
-                "relationshipWeightProperty": {
-                    "type": "string",
-                    "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
-                },
-                "objective": {
-                    "type": "string",
-                    "enum": ["minimum", "maximum"],
-                    "description": "If specified, the parameter dictates whether to seek a minimum or the maximum weight k-spanning tree. By default, the procedure looks for a minimum weight k-spanning tree. Permitted values are 'minimum' and 'maximum'.",
-                },
-            },
-            "required": ["writeProperty", "k"],
         },
     ),
     types.Tool(

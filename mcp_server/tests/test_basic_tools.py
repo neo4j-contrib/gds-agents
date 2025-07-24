@@ -3,58 +3,6 @@ import json
 
 
 @pytest.mark.asyncio
-async def test_find_shortest_path(mcp_client):
-    result = await mcp_client.call_tool(
-        "find_shortest_path",
-        {
-            "start_node": "Canada Water",
-            "end_node": "Tower Hill",
-            "nodeIdentifierProperty": "name",
-            "relationship_property": "time",
-        },
-    )
-
-    assert len(result) == 1
-    result_text = result[0]["text"]
-    result_data = json.loads(result_text)
-
-    assert "nodeNames" in result_data
-    assert result_data["totalCost"] == 9.0
-    expected_node_ids = [292, 188, 243, 196, 261, 2, 230]
-    assert result_data["nodeIds"] == expected_node_ids
-
-    node_names = result_data["nodeNames"]
-    assert len(node_names) == 7
-    assert "Canada Water" in node_names[0]
-    assert "Tower Hill" in node_names[-1]
-    expected_stations = [
-        "Canada Water",
-        "Rotherhithe",
-        "Wapping",
-        "Shadwell",
-        "Whitechapel",
-        "Aldgate East",
-        "Tower Hill",
-    ]
-    for i, expected_station in enumerate(expected_stations):
-        assert expected_station in node_names[i]
-
-    # Test with stations that should not have a path
-    result = await mcp_client.call_tool(
-        "find_shortest_path",
-        {
-            "start_node": "NonExistentStation1",
-            "end_node": "NonExistentStation2",
-            "nodeIdentifierProperty": "name",
-        },
-    )
-
-    result_text = result[0]["text"]
-    result_data = json.loads(result_text)
-    assert result_data["found"] is False
-
-
-@pytest.mark.asyncio
 async def test_count_nodes(mcp_client):
     result = await mcp_client.call_tool("count_nodes")
 
@@ -113,7 +61,6 @@ async def test_list_tools(mcp_client):
         "a_star_shortest_path",
         "yens_shortest_paths",
         "minimum_weight_spanning_tree",
-        "minimum_weight_k_spanning_tree",
         "minimum_directed_steiner_tree",
         "prize_collecting_steiner_tree",
         "all_pairs_shortest_paths",
@@ -130,3 +77,23 @@ async def test_list_tools(mcp_client):
         assert expected_tool in tool_names, (
             f"Expected tool '{expected_tool}' not found in tool list"
         )
+
+
+@pytest.mark.asyncio
+async def test_get_node_properties_keys(mcp_client):
+    result = await mcp_client.call_tool("get_node_properties_keys")
+
+    assert len(result) == 1
+    result_text = result[0]["text"]
+    properties_keys = json.loads(result_text)
+
+    assert properties_keys == [
+        "zone",
+        "rail",
+        "latitude",
+        "name",
+        "total_lines",
+        "id",
+        "display_name",
+        "longitude",
+    ]

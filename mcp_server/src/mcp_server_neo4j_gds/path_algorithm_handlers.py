@@ -98,7 +98,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Delta-Stepping shortest path parameters: {params}")
 
-            path_data = self.gds.shortestPath.deltaStepping.stream(
+            path_data = self.gds.allShortestPaths.delta.stream(
                 G, sourceNode=source_node_id, **params
             )
 
@@ -111,22 +111,42 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
             # Convert to native Python types as needed
             result_data = []
             for _, row in path_data.iterrows():
-                node_id = int(row["targetNode"])
-                cost = float(row["cost"])
+                target_node_id = int(row["targetNode"])
+                total_cost = float(row["totalCost"])
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
+                # Get the path details
+                node_ids = row["nodeIds"]
+                costs = row["costs"]
+                path = row["path"]
+
+                # Convert to native Python types if needed
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
+                if hasattr(costs, "tolist"):
+                    costs = costs.tolist()
+
+                # Get node names using GDS utility function
+                target_node_name = self.gds.util.asNode(target_node_id)
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
                 result_data.append(
-                    {"targetNodeId": node_id, "targetNodeName": node_name, "cost": cost}
+                    {
+                        "targetNode": target_node_id,
+                        "targetNodeName": target_node_name,
+                        "totalCost": total_cost,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "costs": costs,
+                        "path": path,
+                    }
                 )
 
+            # Do we need to return the sourceNodeId and sourceNodeName?
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
                 "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
+                "results": result_data,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -160,7 +180,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
 
-            path_data = self.gds.shortestPath.dijkstra.stream(
+            path_data = self.gds.allShortestPaths.dijkstra.stream(
                 G, sourceNode=source_node_id, **params
             )
 
@@ -173,22 +193,41 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
             # Convert to native Python types as needed
             result_data = []
             for _, row in path_data.iterrows():
-                node_id = int(row["targetNode"])
-                cost = float(row["cost"])
+                target_node_id = int(row["targetNode"])
+                total_cost = float(row["totalCost"])
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
+                # Get the path details
+                node_ids = row["nodeIds"]
+                costs = row["costs"]
+                path = row["path"]
+
+                # Convert to native Python types if needed
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
+                if hasattr(costs, "tolist"):
+                    costs = costs.tolist()
+
+                # Get node names using GDS utility function
+                target_node_name = self.gds.util.asNode(target_node_id)
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
                 result_data.append(
-                    {"targetNodeId": node_id, "targetNodeName": node_name, "cost": cost}
+                    {
+                        "targetNode": target_node_id,
+                        "targetNodeName": target_node_name,
+                        "totalCost": total_cost,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "costs": costs,
+                        "path": path,
+                    }
                 )
 
             return {
                 "found": True,
                 "sourceNodeId": source_node_id,
                 "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
+                "results": result_data,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -346,8 +385,8 @@ class YensShortestPathsHandler(AlgorithmHandler):
                 "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "targetNodeId": target_node_id,
                 "targetNodeName": self.gds.util.asNode(target_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
+                "results": result_data,
+                "totalResults": len(result_data),
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -393,76 +432,44 @@ class MinimumWeightSpanningTreeHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
+            edges = []
             total_weight = 0.0
 
             for _, row in mst_data.iterrows():
-                source_id = int(row["sourceNode"])
-                target_id = int(row["targetNode"])
-                weight = float(row["cost"])
+                node_id = int(row["nodeId"])
+                parent_id = int(row["parentId"])
+                weight = float(row["weight"])
+
+                # Skip the root node (where nodeId == parentId)
+                if node_id == parent_id:
+                    continue
+
                 total_weight += weight
 
                 # Get node names using GDS utility function
-                source_name = self.gds.util.asNode(source_id)
-                target_name = self.gds.util.asNode(target_id)
+                parent_name = self.gds.util.asNode(parent_id)
+                node_name = self.gds.util.asNode(node_id)
 
-                result_data.append(
+                edges.append(
                     {
-                        "sourceNodeId": source_id,
-                        "sourceNodeName": source_name,
-                        "targetNodeId": target_id,
-                        "targetNodeName": target_name,
-                        "cost": weight,
+                        "nodeId": node_id,
+                        "parentId": parent_id,
+                        "nodeName": node_name,
+                        "parentName": parent_name,
+                        "weight": weight,
                     }
                 )
 
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
                 "totalWeight": total_weight,
-                "relationships": result_data,
-                "totalRelationships": len(result_data),
+                "edges": edges,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.minimum_weight_spanning_tree(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
-            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
-            objective=arguments.get("objective"),
-        )
-
-
-class MinimumWeightKSpanningTreeHandler(AlgorithmHandler):
-    def minimum_weight_k_spanning_tree(self, write_property: str, k: int, **kwargs):
-        with projected_graph(self.gds, undirected=True) as G:
-            # If any optional parameter is not None, use that parameter
-            params = {k: v for k, v in kwargs.items() if v is not None}
-            logger.info(f"Minimum Weight K-Spanning Tree parameters: {params}")
-
-            # Run the k-spanning tree algorithm
-            result = self.gds.kSpanningTree.write(
-                G, writeProperty=write_property, k=k, **params
-            )
-
-            # The write procedure returns performance metrics and effectiveNodeCount
-            # The results are written to the database with the specified writeProperty
-            return {
-                "found": True,
-                "writeProperty": write_property,
-                "k": k,
-                "effectiveNodeCount": int(result["effectiveNodeCount"]),
-                "preProcessingMillis": int(result["preProcessingMillis"]),
-                "computeMillis": int(result["computeMillis"]),
-                "writeMillis": int(result["writeMillis"]),
-                "message": f"K-spanning tree with {result['effectiveNodeCount']} nodes written to property '{write_property}'",
-            }
-
-    def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.minimum_weight_k_spanning_tree(
-            arguments.get("writeProperty"),
-            arguments.get("k"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             objective=arguments.get("objective"),
         )
@@ -541,38 +548,32 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
+            edges = []
             total_weight = 0.0
 
             for _, row in steiner_data.iterrows():
-                source_id = int(row["sourceNode"])
-                target_id = int(row["targetNode"])
-                weight = float(row["cost"])
+                node_id = int(row["nodeId"])
+                parent_id = int(row["parentId"])
+                weight = float(row["weight"])
+
+                # Skip the root node (where nodeId == parentId)
+                if node_id == parent_id:
+                    continue
+
                 total_weight += weight
 
-                # Get node names using GDS utility function
-                source_name = self.gds.util.asNode(source_id)
-                target_name = self.gds.util.asNode(target_id)
-
-                result_data.append(
+                edges.append(
                     {
-                        "sourceNodeId": source_id,
-                        "sourceNodeName": source_name,
-                        "targetNodeId": target_id,
-                        "targetNodeName": target_name,
-                        "cost": weight,
+                        "nodeId": node_id,
+                        "parentId": parent_id,
+                        "weight": weight,
                     }
                 )
 
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "targetNodes": target_node_names,
-                "targetNodeIds": target_node_ids,
                 "totalWeight": total_weight,
-                "relationships": result_data,
-                "totalRelationships": len(result_data),
+                "edges": edges,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -588,7 +589,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
 
 class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
     def prize_collecting_steiner_tree(self, **kwargs):
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=True) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Prize-Collecting Steiner Tree parameters: {params}")
@@ -603,48 +604,32 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
+            edges = []
             total_weight = 0.0
-            total_prize = 0.0
 
             for _, row in steiner_data.iterrows():
-                source_id = int(row["sourceNode"])
-                target_id = int(row["targetNode"])
-                weight = float(row["cost"])
+                node_id = int(row["nodeId"])
+                parent_id = int(row["parentId"])
+                weight = float(row["weight"])
+
+                # Skip the root node (where nodeId == parentId)
+                if node_id == parent_id:
+                    continue
+
                 total_weight += weight
 
-                # Get node names using GDS utility function
-                source_name = self.gds.util.asNode(source_id)
-                target_name = self.gds.util.asNode(target_id)
-
-                result_data.append(
+                edges.append(
                     {
-                        "sourceNodeId": source_id,
-                        "sourceNodeName": source_name,
-                        "targetNodeId": target_id,
-                        "targetNodeName": target_name,
-                        "cost": weight,
+                        "nodeId": node_id,
+                        "parentId": parent_id,
+                        "weight": weight,
                     }
                 )
-
-            # Calculate total prize from nodes in the tree
-            if "prizeProperty" in params:
-                prize_query = f"""
-                MATCH (n)
-                WHERE n.{params["prizeProperty"]} IS NOT NULL
-                RETURN sum(n.{params["prizeProperty"]}) as totalPrize
-                """
-                prize_df = self.gds.run_cypher(prize_query)
-                if not prize_df.empty:
-                    total_prize = float(prize_df["totalPrize"].iloc[0])
 
             return {
                 "found": True,
                 "totalWeight": total_weight,
-                "totalPrize": total_prize,
-                "netValue": total_prize - total_weight,
-                "relationships": result_data,
-                "totalRelationships": len(result_data),
+                "edges": edges,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -668,47 +653,24 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
                 return {"found": False, "message": "No shortest paths found"}
 
             # Convert to native Python types as needed
-            result_data = []
-            finite_paths = 0
-            infinite_paths = 0
+            paths = []
 
             for _, row in apsp_data.iterrows():
-                source_id = int(row["sourceNode"])
-                target_id = int(row["targetNode"])
-                cost = row["cost"]
+                source_id = int(row["sourceNodeId"])
+                target_id = int(row["targetNodeId"])
+                distance = float(row["distance"])
 
-                # Check if the cost is finite (not infinity)
-                is_finite = self.gds.util.isFinite(cost)
-
-                if is_finite:
-                    finite_paths += 1
-                    cost_value = float(cost)
-                else:
-                    infinite_paths += 1
-                    cost_value = float("inf")
-
-                # Get node names using GDS utility function
-                source_name = self.gds.util.asNode(source_id)
-                target_name = self.gds.util.asNode(target_id)
-
-                result_data.append(
+                paths.append(
                     {
                         "sourceNodeId": source_id,
-                        "sourceNodeName": source_name,
                         "targetNodeId": target_id,
-                        "targetNodeName": target_name,
-                        "cost": cost_value,
-                        "isFinite": is_finite,
+                        "distance": distance,
                     }
                 )
 
             return {
                 "found": True,
-                "totalPairs": len(result_data),
-                "finitePaths": finite_paths,
-                "infinitePaths": infinite_paths,
-                "paths": result_data,
-                "message": f"Found {finite_paths} finite paths and {infinite_paths} infinite paths between all pairs of nodes",
+                "paths": paths,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -744,8 +706,12 @@ class RandomWalkHandler(AlgorithmHandler):
                     source_node_ids.append(int(source_df["source_id"].iloc[0]))
 
         with projected_graph(self.gds) as G:
-            # Prepare parameters for the random walk algorithm
-            params = {k: v for k, v in kwargs.items() if v is not None}
+            # Prepare parameters for the random walk algorithm, excluding our internal parameters
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k != "nodeIdentifierProperty"
+            }
 
             # Add source nodes if found
             if source_node_ids:
@@ -760,29 +726,28 @@ class RandomWalkHandler(AlgorithmHandler):
                 return {"found": False, "message": "No random walks generated"}
 
             # Convert to native Python types as needed
-            result_data = []
-            total_walks = 0
+            walks = []
 
             for _, row in walk_data.iterrows():
-                walk_id = int(row["walkId"])
-                path = row["path"]
+                node_ids = row["nodeIds"]
+                # Convert node_ids to list if it's not already
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
 
-                # Convert path to list of node names
-                node_names = []
-                for node_id in path:
-                    node_name = self.gds.util.asNode(node_id)
-                    node_names.append(node_name)
+                # Get node names using GDS utility function
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
-                result_data.append(
-                    {"walkId": walk_id, "path": node_names, "pathLength": len(path)}
+                walks.append(
+                    {
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "walkLength": len(node_ids),
+                    }
                 )
-                total_walks += 1
 
             return {
                 "found": True,
-                "totalWalks": total_walks,
-                "walks": result_data,
-                "message": f"Generated {total_walks} random walks",
+                "walks": walks,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -836,8 +801,12 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                     target_node_ids.append(int(target_df["target_id"].iloc[0]))
 
         with projected_graph(self.gds) as G:
-            # Prepare parameters for the BFS algorithm
-            params = {k: v for k, v in kwargs.items() if v is not None}
+            # Prepare parameters for the BFS algorithm, excluding our internal parameters
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k != "nodeIdentifierProperty"
+            }
 
             # Add target nodes if found
             if target_node_ids:
@@ -855,34 +824,31 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
-            visited_nodes = 0
+            traversals = []
 
             for _, row in bfs_data.iterrows():
-                node_id = int(row["nodeId"])
-                depth = int(row["depth"])
+                source_node = int(row["sourceNode"])
+                node_ids = row["nodeIds"]
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
+                # Convert node_ids to list if it's not already
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
 
-                result_data.append(
-                    {"nodeId": node_id, "nodeName": node_name, "depth": depth}
+                # Get node names using GDS utility function
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
+
+                traversals.append(
+                    {
+                        "sourceNode": source_node,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "visitedNodes": len(node_ids),
+                    }
                 )
-                visited_nodes += 1
-
-            # Sort by depth for better readability
-            result_data.sort(key=lambda x: x["depth"])
 
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "visitedNodes": visited_nodes,
-                "nodes": result_data,
-                "maxDepthReached": max([node["depth"] for node in result_data])
-                if result_data
-                else 0,
-                "message": f"Visited {visited_nodes} nodes starting from '{self.gds.util.asNode(source_node_id)}'",
+                "traversals": traversals,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -932,8 +898,12 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                     target_node_ids.append(int(target_df["target_id"].iloc[0]))
 
         with projected_graph(self.gds) as G:
-            # Prepare parameters for the DFS algorithm
-            params = {k: v for k, v in kwargs.items() if v is not None}
+            # Prepare parameters for the DFS algorithm, excluding our internal parameters
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k != "nodeIdentifierProperty"
+            }
 
             # Add target nodes if found
             if target_node_ids:
@@ -951,34 +921,31 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
-            visited_nodes = 0
+            traversals = []
 
             for _, row in dfs_data.iterrows():
-                node_id = int(row["nodeId"])
-                depth = int(row["depth"])
+                source_node = int(row["sourceNode"])
+                node_ids = row["nodeIds"]
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
+                # Convert node_ids to list if it's not already
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
 
-                result_data.append(
-                    {"nodeId": node_id, "nodeName": node_name, "depth": depth}
+                # Get node names using GDS utility function
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
+
+                traversals.append(
+                    {
+                        "sourceNode": source_node,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "visitedNodes": len(node_ids),
+                    }
                 )
-                visited_nodes += 1
-
-            # Sort by depth for better readability
-            result_data.sort(key=lambda x: x["depth"])
 
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "visitedNodes": visited_nodes,
-                "nodes": result_data,
-                "maxDepthReached": max([node["depth"] for node in result_data])
-                if result_data
-                else 0,
-                "message": f"Visited {visited_nodes} nodes starting from '{self.gds.util.asNode(source_node_id)}'",
+                "traversals": traversals,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -1011,8 +978,12 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
         source_node_id = int(source_df["source_id"].iloc[0])
 
         with projected_graph(self.gds) as G:
-            # If any optional parameter is not None, use that parameter
-            params = {k: v for k, v in kwargs.items() if v is not None}
+            # Prepare parameters for the Bellman-Ford algorithm, excluding our internal parameters
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k != "nodeIdentifierProperty"
+            }
             logger.info(
                 f"Bellman-Ford Single-Source Shortest Path parameters: {params}"
             )
@@ -1029,64 +1000,42 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
-            negative_cycles = []
+            paths = []
 
             for _, row in bellman_ford_data.iterrows():
-                node_id = int(row["targetNode"])
-                cost = row["cost"]
+                index = int(row["index"])
+                source_node = int(row["sourceNode"])
+                target_node = int(row["targetNode"])
+                total_cost = float(row["totalCost"])
+                node_ids = row["nodeIds"]
+                costs = row["costs"]
+                is_negative_cycle = bool(row["isNegativeCycle"])
 
-                # Check if the cost is finite (not infinity)
-                is_finite = self.gds.util.isFinite(cost)
+                # Convert arrays to lists if needed
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
+                if hasattr(costs, "tolist"):
+                    costs = costs.tolist()
 
-                if is_finite:
-                    cost_value = float(cost)
-                else:
-                    cost_value = float("inf")
+                # Get node names using GDS utility function
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
-
-                result_data.append(
+                paths.append(
                     {
-                        "targetNodeId": node_id,
-                        "targetNodeName": node_name,
-                        "cost": cost_value,
-                        "isFinite": is_finite,
+                        "index": index,
+                        "sourceNode": source_node,
+                        "targetNode": target_node,
+                        "totalCost": total_cost,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "costs": costs,
+                        "isNegativeCycle": is_negative_cycle,
                     }
                 )
 
-            # Check for negative cycles in the result
-            # If there are negative cycles, the algorithm might return them instead of shortest paths
-            if "negativeCycle" in bellman_ford_data.columns:
-                for _, row in bellman_ford_data.iterrows():
-                    if "negativeCycle" in row and row["negativeCycle"] is not None:
-                        cycle = row["negativeCycle"]
-                        if hasattr(cycle, "tolist"):
-                            cycle = cycle.tolist()
-
-                        # Convert cycle node IDs to names
-                        cycle_names = [
-                            self.gds.util.asNode(node_id) for node_id in cycle
-                        ]
-                        negative_cycles.append(
-                            {"cycle": cycle_names, "cycleLength": len(cycle)}
-                        )
-
             return {
                 "found": True,
-                "sourceNodeId": source_node_id,
-                "sourceNodeName": self.gds.util.asNode(source_node_id),
-                "paths": result_data,
-                "totalPaths": len(result_data),
-                "negativeCycles": negative_cycles,
-                "hasNegativeCycles": len(negative_cycles) > 0,
-                "message": f"Found {len(result_data)} paths from '{self.gds.util.asNode(source_node_id)}'"
-                + (
-                    f" and {len(negative_cycles)} negative cycles"
-                    if negative_cycles
-                    else ""
-                ),
+                "paths": paths,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -1100,8 +1049,12 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
 class LongestPathHandler(AlgorithmHandler):
     def longest_path(self, **kwargs):
         with projected_graph(self.gds) as G:
-            # If any optional parameter is not None, use that parameter
-            params = {k: v for k, v in kwargs.items() if v is not None}
+            # Prepare parameters for the longest path algorithm, excluding our internal parameters
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k != "nodeIdentifierProperty"
+            }
             logger.info(f"Longest Path parameters: {params}")
 
             # Run the longest path algorithm
@@ -1114,55 +1067,40 @@ class LongestPathHandler(AlgorithmHandler):
                 }
 
             # Convert to native Python types as needed
-            result_data = []
-            total_weight = 0.0
+            paths = []
 
             for _, row in longest_path_data.iterrows():
-                node_id = int(row["nodeId"])
-                cost = row["cost"]
+                index = int(row["index"])
+                source_node = int(row["sourceNode"])
+                target_node = int(row["targetNode"])
+                total_cost = float(row["totalCost"])
+                node_ids = row["nodeIds"]
+                costs = row["costs"]
 
-                # Check if the cost is finite (not infinity)
-                is_finite = self.gds.util.isFinite(cost)
+                # Convert arrays to lists if needed
+                if hasattr(node_ids, "tolist"):
+                    node_ids = node_ids.tolist()
+                if hasattr(costs, "tolist"):
+                    costs = costs.tolist()
 
-                if is_finite:
-                    cost_value = float(cost)
-                    total_weight += cost_value
-                else:
-                    cost_value = float("inf")
+                # Get node names using GDS utility function
+                node_names = [self.gds.util.asNode(node_id) for node_id in node_ids]
 
-                # Get node name using GDS utility function
-                node_name = self.gds.util.asNode(node_id)
-
-                result_data.append(
+                paths.append(
                     {
-                        "nodeId": node_id,
-                        "nodeName": node_name,
-                        "longestPathCost": cost_value,
-                        "isFinite": is_finite,
+                        "index": index,
+                        "sourceNode": source_node,
+                        "targetNode": target_node,
+                        "totalCost": total_cost,
+                        "nodeIds": node_ids,
+                        "nodeNames": node_names,
+                        "costs": costs,
                     }
                 )
 
-            # Sort by cost for better readability (highest first)
-            result_data.sort(
-                key=lambda x: x["longestPathCost"] if x["isFinite"] else float("inf"),
-                reverse=True,
-            )
-
             return {
                 "found": True,
-                "nodes": result_data,
-                "totalNodes": len(result_data),
-                "totalWeight": total_weight,
-                "maxLongestPath": max(
-                    [
-                        node["longestPathCost"]
-                        for node in result_data
-                        if node["isFinite"]
-                    ]
-                )
-                if any(node["isFinite"] for node in result_data)
-                else 0,
-                "message": f"Found longest paths for {len(result_data)} nodes in DAG components",
+                "paths": paths,
             }
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
