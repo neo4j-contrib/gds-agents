@@ -211,3 +211,129 @@ async def test_bridges(mcp_client):
     assert "remainingSizes" in result_with_names_text
     assert "fromName" in result_with_names_text
     assert "toName" in result_with_names_text
+
+
+@pytest.mark.asyncio
+async def test_celf(mcp_client):
+    result_with_names = await mcp_client.call_tool("CELF", {
+        "seedSetSize": 3,
+        "nodeIdentifierProperty": "name"
+    })
+    
+    assert len(result_with_names) == 1
+    result_with_names_text = result_with_names[0]["text"]
+    assert "nodeId" in result_with_names_text
+    assert "spread" in result_with_names_text
+    assert "nodeName" in result_with_names_text
+
+
+@pytest.mark.asyncio
+async def test_closeness_centrality(mcp_client):
+    result_filtered = await mcp_client.call_tool("closeness_centrality", {
+        "nodes": ["King's Cross St. Pancras", "Oxford Circus"],
+        "nodeIdentifierProperty": "name"
+    })
+    
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    assert "nodeId" in result_filtered_text
+    assert "score" in result_filtered_text
+    assert "nodeName" in result_filtered_text
+
+
+@pytest.mark.asyncio
+async def test_degree_centrality(mcp_client):
+    result_filtered = await mcp_client.call_tool("degree_centrality", {
+        "nodes": ["King's Cross St. Pancras", "Oxford Circus"],
+        "nodeIdentifierProperty": "name"
+    })
+    
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    assert "nodeId" in result_filtered_text
+    assert "score" in result_filtered_text
+    assert "nodeName" in result_filtered_text
+
+
+@pytest.mark.asyncio
+async def test_eigenvector_centrality(mcp_client):
+    result_combined = await mcp_client.call_tool("eigenvector_centrality", {
+        "sourceNodes": ["Covent Garden"],
+        "nodes": ["Covent Garden", "Southwark", "London Bridge"],
+        "nodeIdentifierProperty": "name",
+        "maxIterations": 15
+    })
+    
+    assert len(result_combined) == 1
+    result_combined_text = result_combined[0]["text"]
+    assert "nodeId" in result_combined_text
+    assert "score" in result_combined_text
+    assert "nodeName" in result_combined_text
+    
+    # Parse results to verify filtering worked
+    combined_lines = result_combined_text.strip().split("\n")
+    combined_data_lines = [line for line in combined_lines[1:] if line.strip()]
+    assert len(combined_data_lines) <= 3  # Should not exceed filtered nodes
+    
+    combined_full_text = " ".join(combined_data_lines)
+    assert (
+        "Covent Garden" in combined_full_text
+        and "Southwark" in combined_full_text
+        and "London Bridge" in combined_full_text
+    )
+
+
+@pytest.mark.asyncio
+async def test_pagerank(mcp_client):
+    result_combined = await mcp_client.call_tool("pagerank", {
+        "sourceNodes": ["Covent Garden"],
+        "nodes": ["Covent Garden", "Southwark", "London Bridge"],
+        "nodeIdentifierProperty": "name",
+        "dampingFactor": 0.85
+    })
+    
+    assert len(result_combined) == 1
+    result_combined_text = result_combined[0]["text"]
+    assert "nodeId" in result_combined_text
+    assert "score" in result_combined_text
+    assert "nodeName" in result_combined_text
+    
+    # Parse results to verify filtering worked
+    combined_lines = result_combined_text.strip().split("\n")
+    combined_data_lines = [line for line in combined_lines[1:] if line.strip()]
+    assert len(combined_data_lines) <= 3  # Should not exceed filtered nodes
+    
+    combined_full_text = " ".join(combined_data_lines)
+    assert (
+        "Covent Garden" in combined_full_text
+        and "Southwark" in combined_full_text
+        and "London Bridge" in combined_full_text
+    )
+
+
+@pytest.mark.asyncio
+async def test_harmonic_centrality(mcp_client):
+    result_filtered = await mcp_client.call_tool("harmonic_centrality", {
+        "nodes": ["King's Cross St. Pancras", "Oxford Circus"],
+        "nodeIdentifierProperty": "name"
+    })
+    
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    assert "nodeId" in result_filtered_text
+    assert "score" in result_filtered_text
+    assert "nodeName" in result_filtered_text
+
+
+@pytest.mark.asyncio
+async def test_hits(mcp_client):
+    result_filtered = await mcp_client.call_tool("HITS", {
+        "nodes": ["King's Cross St. Pancras", "Oxford Circus"],
+        "nodeIdentifierProperty": "name"
+    })
+    
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    assert "nodeId" in result_filtered_text
+    assert "values" in result_filtered_text
+    assert "nodeName" in result_filtered_text
