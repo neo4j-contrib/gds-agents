@@ -26,14 +26,29 @@ class ConductanceHandler(AlgorithmHandler):
 class HDBSCANHandler(AlgorithmHandler):
     def hdbscan(self, **kwargs):
         with projected_graph(self.gds) as G:
-            logger.info(f"HDBSCAN parameters: {kwargs}")
-            hdbscan_result = self.gds.hdbscan.stream(G, **kwargs)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodeIdentifierProperty"]
+            }
+            logger.info(f"HDBSCAN parameters: {params}")
+            hdbscan_result = self.gds.hdbscan.stream(G, **params)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in hdbscan_result["nodeId"]
+            ]
+            hdbscan_result["nodeName"] = node_name_values
 
         return hdbscan_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.hdbscan(
             nodeProperty=arguments.get("nodeProperty"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             minClusterSize=arguments.get("minClusterSize"),
             samples=arguments.get("samples"),
             leafSize=arguments.get("leafSize"),
@@ -41,27 +56,53 @@ class HDBSCANHandler(AlgorithmHandler):
 
 
 class KCoreDecompositionHandler(AlgorithmHandler):
-    def k_core_decomposition(self):
+    def k_core_decomposition(self, **kwargs):
         with projected_graph(self.gds, undirected=True) as G:
             logger.info("Running K-Core Decomposition")
-            kcore_decomposition_result = self.gds.kcore_decomposition.stream(G)
+            kcore_decomposition_result = self.gds.kcore.stream(G)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in kcore_decomposition_result["nodeId"]
+            ]
+            kcore_decomposition_result["nodeName"] = node_name_values
 
         return kcore_decomposition_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.k_core_decomposition()
+        return self.k_core_decomposition(
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+        )
 
 
 class K1ColoringHandler(AlgorithmHandler):
     def k_1_coloring(self, **kwargs):
         with projected_graph(self.gds) as G:
-            logger.info(f"K-1 Coloring parameters: {kwargs}")
-            k1_coloring_result = self.gds.k1_coloring.stream(G, **kwargs)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodeIdentifierProperty"]
+            }
+            logger.info(f"K-1 Coloring parameters: {params}")
+            k1_coloring_result = self.gds.k1coloring.stream(G, **params)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in k1_coloring_result["nodeId"]
+            ]
+            k1_coloring_result["nodeName"] = node_name_values
 
         return k1_coloring_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.k_1_coloring(
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             maxIterations=arguments.get("maxIterations"),
             minCommunitySize=arguments.get("minCommunitySize"),
         )
@@ -70,14 +111,29 @@ class K1ColoringHandler(AlgorithmHandler):
 class KMeansClusteringHandler(AlgorithmHandler):
     def k_means_clustering(self, **kwargs):
         with projected_graph(self.gds) as G:
-            logger.info(f"K-Means Clustering parameters: {kwargs}")
-            kmeans_clustering_result = self.gds.kmeans_clustering.stream(G, **kwargs)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodeIdentifierProperty"]
+            }
+            logger.info(f"K-Means Clustering parameters: {params}")
+            kmeans_clustering_result = self.gds.kmeans_clustering.stream(G, **params)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in kmeans_clustering_result["nodeId"]
+            ]
+            kmeans_clustering_result["nodeName"] = node_name_values
 
         return kmeans_clustering_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.k_means_clustering(
             nodeProperty=arguments.get("nodeProperty"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             k=arguments.get("k"),
             maxIterations=arguments.get("maxIterations"),
             deltaThreshold=arguments.get("deltaThreshold"),
