@@ -29,7 +29,7 @@ async def test_article_rank(mcp_client):
     result = await mcp_client.call_tool(
         "article_rank",
         {
-            "nodeNames": ["Covent Garden", "Southwark"],
+            "nodes": ["Covent Garden", "Southwark"],
             "nodeIdentifierProperty": "name",
             "dampingFactor": 0.85,
         },
@@ -138,12 +138,12 @@ async def test_article_rank(mcp_client):
         f"Personalized ArticleRank should change scores for Southwark (diff: {sw_diff})"
     )
 
-    # Test combining sourceNodes with nodeNames filtering
+    # Test combining sourceNodes with nodes filtering
     combined_result = await mcp_client.call_tool(
         "article_rank",
         {
             "sourceNodes": ["Covent Garden"],
-            "nodeNames": ["Covent Garden", "Southwark", "London Bridge"],
+            "nodes": ["Covent Garden", "Southwark", "London Bridge"],
             "nodeIdentifierProperty": "name",
             "dampingFactor": 0.85,
         },
@@ -166,3 +166,48 @@ async def test_article_rank(mcp_client):
         and "Southwark" in combined_full_text
         and "London Bridge" in combined_full_text
     )
+
+
+@pytest.mark.asyncio
+async def test_articulation_points(mcp_client):
+    result_with_names = await mcp_client.call_tool(
+        "articulation_points", {"nodeIdentifierProperty": "name"}
+    )
+
+    assert len(result_with_names) == 1
+    result_with_names_text = result_with_names[0]["text"]
+    assert "nodeId" in result_with_names_text
+    assert "resultingComponents" in result_with_names_text
+    assert "nodeName" in result_with_names_text
+
+
+@pytest.mark.asyncio
+async def test_betweenness_centrality(mcp_client):
+    result_filtered = await mcp_client.call_tool(
+        "betweenness_centrality",
+        {
+            "nodes": ["King's Cross St. Pancras", "Oxford Circus"],
+            "nodeIdentifierProperty": "name",
+        },
+    )
+
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    assert "nodeId" in result_filtered_text
+    assert "score" in result_filtered_text
+    assert "nodeName" in result_filtered_text
+
+
+@pytest.mark.asyncio
+async def test_bridges(mcp_client):
+    result_with_names = await mcp_client.call_tool(
+        "bridges", {"nodeIdentifierProperty": "name"}
+    )
+
+    assert len(result_with_names) == 1
+    result_with_names_text = result_with_names[0]["text"]
+    assert "from" in result_with_names_text
+    assert "to" in result_with_names_text
+    assert "remainingSizes" in result_with_names_text
+    assert "fromName" in result_with_names_text
+    assert "toName" in result_with_names_text

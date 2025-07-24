@@ -17,9 +17,9 @@ class ArticleRankHandler(AlgorithmHandler):
                 k: v
                 for k, v in kwargs.items()
                 if v is not None
-                and k not in ["nodeNames", "nodeIdentifierProperty", "sourceNodes"]
+                and k not in ["nodes", "nodeIdentifierProperty", "sourceNodes"]
             }
-            node_names = kwargs.get("nodeNames", None)
+            node_names = kwargs.get("nodes", None)
             node_identifier_property = kwargs.get("nodeIdentifierProperty")
             source_nodes = kwargs.get("sourceNodes", None)
 
@@ -92,7 +92,7 @@ class ArticleRankHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.article_rank(
-            nodeNames=arguments.get("nodeNames"),
+            nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             sourceNodes=arguments.get("sourceNodes"),
             scaler=arguments.get("scaler"),
@@ -103,48 +103,65 @@ class ArticleRankHandler(AlgorithmHandler):
 
 
 class ArticulationPointsHandler(AlgorithmHandler):
-    def articulation_points(self):
-        with projected_graph(self.gds) as G:
+    def articulation_points(self, **kwargs):
+        with projected_graph(self.gds, undirected=True) as G:
             articulation_points = self.gds.articulationPoints.stream(G)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in articulation_points["nodeId"]
+            ]
+            articulation_points["nodeName"] = node_name_values
 
         return articulation_points
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.articulation_points()
+        return self.articulation_points(
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+        )
 
 
 class BetweennessCentralityHandler(AlgorithmHandler):
     def betweenness_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
-            args = locals()
             params = {
                 k: v
                 for k, v in kwargs.items()
-                if v is not None and k not in ["nodes", "property_key"]
+                if v is not None and k not in ["nodes", "nodeIdentifierProperty"]
             }
-            names = kwargs.get("nodes", None)
             logger.info(f"Betweenness centrality parameters: {params}")
             centrality = self.gds.betweenness.stream(G, **params)
 
-        names = kwargs.get("nodes", None)
-        if names is not None:
-            property_key = kwargs.get("property_key", None)
-            if property_key is None:
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in centrality["nodeId"]
+            ]
+            centrality["nodeName"] = node_name_values
+
+        # Filter results by node names if provided
+        node_names = kwargs.get("nodes", None)
+        if node_names is not None:
+            if node_identifier_property is None:
                 raise ValueError(
-                    "If 'nodes' is provided, 'property_key' must also be specified. "
-                    "get_node_properties_keys should return all available property keys and the most appropriate one can be picked."
+                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
                 )
 
             query = f"""
             UNWIND $names AS name
             MATCH (s)
-            WHERE toLower(s.{property_key}) CONTAINS toLower(name)
+            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
             RETURN id(s) as node_id
             """
             df = self.gds.run_cypher(
                 query,
                 params={
-                    "names": names,
+                    "names": node_names,
                 },
             )
             node_ids = df["node_id"].tolist()
@@ -154,18 +171,38 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.betweenness_centrality(
-            nodes=arguments.get("nodes"), property_key=arguments.get("property_key")
+            nodes=arguments.get("nodes"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            samplingSize=arguments.get("samplingSize"),
+            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class BridgesHandler(AlgorithmHandler):
-    def bridges(self):
-        with projected_graph(self.gds) as G:
+    def bridges(self, **kwargs):
+        with projected_graph(self.gds, undirected=True) as G:
             bridges_result = self.gds.bridges.stream(G)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            from_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in bridges_result["from"]
+            ]
+            to_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in bridges_result["to"]
+            ]
+            bridges_result["fromName"] = from_name_values
+            bridges_result["toName"] = to_name_values
+
         return bridges_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
-        return self.bridges()
+        return self.bridges(
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+        )
 
 
 class CELFHandler(AlgorithmHandler):

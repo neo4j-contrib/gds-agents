@@ -8,10 +8,10 @@ centrality_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
-                "nodeNames": {
+                "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of node names to return the ArticleRank for.",
+                    "description": "List of node to filter return the ArticleRank for.",
                 },
                 "nodeIdentifierProperty": {
                     "type": "string",
@@ -69,6 +69,13 @@ centrality_tool_definitions = [
         description="Find all the articulation points. Given a graph, an articulation point is a node whose removal increases the number of connected components in the graph.",
         inputSchema={
             "type": "object",
+            "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
+            },
+            "required": [],
         },
     ),
     types.Tool(
@@ -80,11 +87,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the betweenness centrality for.",
+                    "description": "List of node names to filter betweenness centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "samplingSize": {
                     "type": "integer",
@@ -103,6 +110,13 @@ centrality_tool_definitions = [
         description="""Find all the bridges in the graph. A bridge is an edge whose removal increases the number of connected components in the graph.""",
         inputSchema={
             "type": "object",
+            "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
+            },
+            "required": [],
         },
     ),
     types.Tool(
