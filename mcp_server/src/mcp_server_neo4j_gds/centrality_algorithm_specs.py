@@ -11,11 +11,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the ArticleRank for.",
+                    "description": "List of node to filter return the ArticleRank for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "dampingFactor": {
                     "type": "number",
@@ -33,10 +33,8 @@ centrality_tool_definitions = [
                     "type": "string",
                     "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
-                # The signature takes node "names" STRING instead of nodeIds according to GDS doc.
-                # The "names" need to be resolved to actual nodes, using the property_key.
                 "sourceNodes": {
-                    "description": "The nodes or node ids or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
+                    "description": "The nodes or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
                     "anyOf": [
                         {"type": "string", "description": "Single node"},
                         {
@@ -71,6 +69,13 @@ centrality_tool_definitions = [
         description="Find all the articulation points. Given a graph, an articulation point is a node whose removal increases the number of connected components in the graph.",
         inputSchema={
             "type": "object",
+            "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
+            },
+            "required": [],
         },
     ),
     types.Tool(
@@ -82,11 +87,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the betweenness centrality for.",
+                    "description": "List of node names to filter betweenness centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "samplingSize": {
                     "type": "integer",
@@ -105,6 +110,13 @@ centrality_tool_definitions = [
         description="""Find all the bridges in the graph. A bridge is an edge whose removal increases the number of connected components in the graph.""",
         inputSchema={
             "type": "object",
+            "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
+            },
+            "required": [],
         },
     ),
     types.Tool(
@@ -126,6 +138,10 @@ centrality_tool_definitions = [
                     "type": "number",
                     "description": "The probability of propagating influence from a node to its neighbors.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
             },
             "required": ["seedSetSize"],
         },
@@ -141,11 +157,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the closeness centrality for.",
+                    "description": "List of node names to filter closeness centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "useWassermanFaust": {
                     "type": "boolean",
@@ -164,11 +180,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the centrality for",
+                    "description": "List of node names to filter degree centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
             },
             "required": [],
@@ -191,11 +207,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the eigenvector centrality for.",
+                    "description": "List of node names to filter eigenvector centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "maxIterations": {
                     "type": "integer",
@@ -209,10 +225,8 @@ centrality_tool_definitions = [
                     "type": "string",
                     "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
                 },
-                # The signature takes node "names" STRING instead of nodeIds according to GDS doc.
-                # The "names" need to be resolved to actual nodes, using the property_key.
                 "sourceNodes": {
-                    "description": "The nodes or node ids or node-bias pairs to use for computing Personalized Article Rank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
+                    "description": "The nodes or node-bias pairs to use for computing Personalized Eigenvector Centrality. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
                     "anyOf": [
                         {"type": "string", "description": "Single node"},
                         {
@@ -250,11 +264,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the PageRank for.",
+                    "description": "List of node names to filter PageRank results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "dampingFactor": {
                     "type": "number",
@@ -267,6 +281,27 @@ centrality_tool_definitions = [
                 "tolerance": {
                     "type": "number",
                     "description": "Minimum change in scores between iterations. If all scores change less than the tolerance value the result is considered stable and the algorithm returns.",
+                },
+                "sourceNodes": {
+                    "description": "The nodes or node-bias pairs to use for computing Personalized PageRank. To use different bias for different source nodes, use the syntax: [[node1, bias1], [node2, bias2], ...]",
+                    "anyOf": [
+                        {"type": "string", "description": "Single node"},
+                        {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of nodes",
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "prefixItems": [{"type": "string"}, {"type": "number"}],
+                                "minItems": 2,
+                                "maxItems": 2,
+                            },
+                            "description": "List of [node, bias] pairs",
+                        },
+                    ],
                 },
             },
             "required": [],
@@ -282,11 +317,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the harmonic centrality for.",
+                    "description": "List of node names to filter harmonic centrality results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
             },
             "required": [],
@@ -303,11 +338,11 @@ centrality_tool_definitions = [
                 "nodes": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "List of nodes to return the HITS scores for.",
+                    "description": "List of node names to filter HITS results for.",
                 },
-                "property_key": {
+                "nodeIdentifierProperty": {
                     "type": "string",
-                    "description": "Property key to use to filter the specified nodes.",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "hitsIterations": {
                     "type": "integer",

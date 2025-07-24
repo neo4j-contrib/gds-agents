@@ -38,6 +38,10 @@ community_tool_definitions = [
                     "type": "string",
                     "description": "A node property corresponding to an array of floats used by HDBSCAN to compute clusters",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "minClusterSize": {
                     "type": "integer",
                     "description": "The minimum number of nodes that a cluster should contain.",
@@ -66,6 +70,13 @@ community_tool_definitions = [
         "With this approach, the different core groups are discovered one-by-one.",
         inputSchema={
             "type": "object",
+            "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
+            },
+            "required": [],
         },
     ),
     types.Tool(
@@ -82,6 +93,10 @@ community_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
                 "maxIterations": {
                     "type": "integer",
                     "description": "The maximum number of iterations to run the coloring algorithm.",
@@ -91,6 +106,7 @@ community_tool_definitions = [
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
                 },
             },
+            "required": [],
         },
     ),
     types.Tool(
@@ -111,6 +127,10 @@ community_tool_definitions = [
                 "nodeProperty": {
                     "type": "string",
                     "description": "A node property corresponding to an array of floats used by K-Means to cluster nodes into communities.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
                 "k": {
                     "type": "integer",
