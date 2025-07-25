@@ -58,12 +58,12 @@ def projected_graph(gds, undirected=False):
     try:
         # Get relationship properties (non-string)
         rel_properties = gds.run_cypher(
-            "MATCH (n)-[r]-(m) RETURN DISTINCT keys(properties(r))"
+            "MATCH (n)-[r]->(m) RETURN DISTINCT keys(properties(r))"
         )["keys(properties(r))"][0]
         valid_rel_properties = {}
         for i in range(len(rel_properties)):
             pi = gds.run_cypher(
-                f"MATCH (n)-[r]-(m) RETURN distinct r.{rel_properties[i]} IS :: STRING AS ISSTRING"
+                f"MATCH (n)-[r]->(m) RETURN distinct r.{rel_properties[i]} IS :: STRING AS ISSTRING"
             )
             if pi.shape[0] == 1 and bool(pi["ISSTRING"][0]) is False:
                 valid_rel_properties[rel_properties[i]] = f"r.{rel_properties[i]}"
@@ -147,7 +147,7 @@ def projected_graph(gds, undirected=False):
         if additional_config:
             G, _ = gds.graph.cypher.project(
                 f"""
-                       MATCH (n)-[r]-(m)
+                       MATCH (n)-[r]->(m)
                        WITH n, r, m
                        RETURN gds.graph.project(
                            $graph_name,
@@ -162,7 +162,7 @@ def projected_graph(gds, undirected=False):
         else:
             G, _ = gds.graph.cypher.project(
                 f"""
-                       MATCH (n)-[r]-(m)
+                       MATCH (n)-[r]->(m)
                        WITH n, r, m
                        RETURN gds.graph.project(
                            $graph_name,
