@@ -117,25 +117,14 @@ async def test_article_rank(mcp_client):
     for i, line in enumerate(personalized_lines_debug):
         print(f"  {i}: {repr(line)}")
 
-    # Check that personalized scores are different from baseline for source nodes
-    baseline_cg_score = extract_score_for_station(baseline_text, "Covent Garden")
-    personalized_cg_score = extract_score_for_station(
-        personalized_text, "Covent Garden"
-    )
+    baseline_pad_score = extract_score_for_station(baseline_text, "Paddington")
+    personalized_pad_score = extract_score_for_station(personalized_text, "Paddington")
 
-    baseline_sw_score = extract_score_for_station(baseline_text, "Southwark")
-    personalized_sw_score = extract_score_for_station(personalized_text, "Southwark")
+    assert baseline_pad_score is not None and personalized_pad_score is not None
+    pad_diff = abs(baseline_pad_score - personalized_pad_score)
 
-    assert baseline_cg_score is not None and personalized_cg_score is not None
-    assert baseline_sw_score is not None and personalized_sw_score is not None
-    cg_diff = abs(baseline_cg_score - personalized_cg_score)
-    sw_diff = abs(baseline_sw_score - personalized_sw_score)
-
-    assert cg_diff > 0.001, (
-        f"Personalized ArticleRank should change scores for Covent Garden (diff: {cg_diff})"
-    )
-    assert sw_diff > 0.001, (
-        f"Personalized ArticleRank should change scores for Southwark (diff: {sw_diff})"
+    assert pad_diff == baseline_pad_score, (
+        f"Personalized ArticleRank should turn the score of Paddington to zero because it is unreachable (diff: {pad_diff})"
     )
 
     # Test combining sourceNodes with nodes filtering
