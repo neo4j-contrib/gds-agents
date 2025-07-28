@@ -198,6 +198,10 @@ community_tool_definitions = [
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
             },
         },
     ),
@@ -240,6 +244,10 @@ community_tool_definitions = [
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
             },
         },
     ),
@@ -259,7 +267,16 @@ community_tool_definitions = [
                 "triangleCountProperty": {
                     "type": "string",
                     "description": "Node property that contains pre-computed triangle count.",
-                }
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of node names to filter results. Only nodes whose names (based on nodeIdentifierProperty) contain any of these values will be included in the results. Requires nodeIdentifierProperty to be specified.",
+                },
             },
         },
     ),
@@ -303,6 +320,10 @@ community_tool_definitions = [
                 "minCommunitySize": {
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
                 },
             },
         },
@@ -360,6 +381,10 @@ community_tool_definitions = [
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
             },
         },
     ),
@@ -374,7 +399,11 @@ community_tool_definitions = [
                 "consecutiveIds": {
                     "type": "boolean",
                     "description": "Flag to decide whether component identifiers are mapped into a consecutive id space (requires additional memory).",
-                }
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
             },
         },
     ),
@@ -393,7 +422,16 @@ community_tool_definitions = [
                 "maxDegree": {
                     "type": "integer",
                     "description": "If a node has a degree higher than this it will not be considered by the algorithm. The triangle count for these nodes will be -1.",
-                }
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of node names to filter results. Only nodes whose names (based on nodeIdentifierProperty) contain any of these values will be included in the results. Requires nodeIdentifierProperty to be specified.",
+                },
             },
         },
     ),
@@ -427,6 +465,10 @@ community_tool_definitions = [
                 "minComponentSize": {
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
                 },
             },
         },
@@ -464,6 +506,10 @@ community_tool_definitions = [
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
             },
         },
     ),
@@ -488,6 +534,10 @@ community_tool_definitions = [
                     "type": "string",
                     "enum": ["AUTO", "RANGE", "DEGREE"],
                     "description": "The partitioning scheme used to divide the work between threads. Available options are AUTO, RANGE, DEGREE.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
                 },
             },
         },

@@ -146,9 +146,23 @@ class KMeansClusteringHandler(AlgorithmHandler):
 
 class LabelPropagationHandler(AlgorithmHandler):
     def label_propagation(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Label Propagation parameters: {kwargs}")
-            label_propagation_result = self.gds.label_propagation.stream(G, **kwargs)
+            logger.info(f"Label Propagation parameters: {gds_kwargs}")
+            label_propagation_result = self.gds.labelPropagation.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in label_propagation_result["nodeId"]
+            ]
+            label_propagation_result["nodeName"] = node_name_values
 
         return label_propagation_result
 
@@ -160,14 +174,29 @@ class LabelPropagationHandler(AlgorithmHandler):
             seedProperty=arguments.get("seedProperty"),
             consecutiveIds=arguments.get("consecutiveIds"),
             minCommunitySize=arguments.get("minCommunitySize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class LeidenHandler(AlgorithmHandler):
     def leiden(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds, undirected=True) as G:
-            logger.info(f"Leiden parameters: {kwargs}")
-            leiden_result = self.gds.leiden.stream(G, **kwargs)
+            logger.info(f"Leiden parameters: {gds_kwargs}")
+            leiden_result = self.gds.leiden.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in leiden_result["nodeId"]
+            ]
+            leiden_result["nodeName"] = node_name_values
 
         return leiden_result
 
@@ -182,30 +211,85 @@ class LeidenHandler(AlgorithmHandler):
             ),
             seedProperty=arguments.get("seedProperty"),
             minCommunitySize=arguments.get("minCommunitySize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class LocalClusteringCoefficientHandler(AlgorithmHandler):
     def local_clustering_coefficient(self, **kwargs):
+        # Filter out non-GDS algorithm parameters
+        gds_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in ["nodeIdentifierProperty", "nodes"]
+        }
+
         with projected_graph(self.gds, undirected=True) as G:
-            logger.info(f"Local Clustering Coefficient parameters: {kwargs}")
+            logger.info(f"Local Clustering Coefficient parameters: {gds_kwargs}")
             local_clustering_coefficient_result = (
-                self.gds.local_clustering_coefficient.stream(G, **kwargs)
+                self.gds.localClusteringCoefficient.stream(G, **gds_kwargs)
             )
+
+        # Get filtering parameters
+        node_names = kwargs.get("nodes", None)
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in local_clustering_coefficient_result["nodeId"]
+            ]
+            local_clustering_coefficient_result["nodeName"] = node_name_values
+
+        # Filter results if nodes parameter provided
+        if node_names is not None:
+            if node_identifier_property is None:
+                raise ValueError(
+                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
+                )
+
+            query = f"""
+            UNWIND $names AS name
+            MATCH (s)
+            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
+            RETURN id(s) as node_id
+            """
+            df = self.gds.run_cypher(query, params={"names": node_names})
+            node_ids = df["node_id"].tolist()
+            local_clustering_coefficient_result = local_clustering_coefficient_result[
+                local_clustering_coefficient_result["nodeId"].isin(node_ids)
+            ]
 
         return local_clustering_coefficient_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.local_clustering_coefficient(
             triangleCountProperty=arguments.get("triangleCountProperty"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            nodes=arguments.get("nodes"),
         )
 
 
 class LouvainHandler(AlgorithmHandler):
     def louvain(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Louvain parameters: {kwargs}")
-            louvain_result = self.gds.louvain.stream(G, **kwargs)
+            logger.info(f"Louvain parameters: {gds_kwargs}")
+            louvain_result = self.gds.louvain.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in louvain_result["nodeId"]
+            ]
+            louvain_result["nodeName"] = node_name_values
 
         return louvain_result
 
@@ -221,6 +305,7 @@ class LouvainHandler(AlgorithmHandler):
             ),
             consecutiveIds=arguments.get("consecutiveIds"),
             minCommunitySize=arguments.get("minCommunitySize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
@@ -228,7 +313,7 @@ class ModularityMetricHandler(AlgorithmHandler):
     def modularity_metric(self, **kwargs):
         with projected_graph(self.gds) as G:
             logger.info(f"Modularity Metric parameters: {kwargs}")
-            modularity_metric_result = self.gds.modularity_metric.stream(G, **kwargs)
+            modularity_metric_result = self.gds.modularity.stream(G, **kwargs)
 
         return modularity_metric_result
 
@@ -241,11 +326,25 @@ class ModularityMetricHandler(AlgorithmHandler):
 
 class ModularityOptimizationHandler(AlgorithmHandler):
     def modularity_optimization(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Modularity Optimization parameters: {kwargs}")
-            modularity_optimization_result = self.gds.modularity_optimization.stream(
-                G, **kwargs
+            logger.info(f"Modularity Optimization parameters: {gds_kwargs}")
+            modularity_optimization_result = self.gds.modularityOptimization.stream(
+                G, **gds_kwargs
             )
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in modularity_optimization_result["nodeId"]
+            ]
+            modularity_optimization_result["nodeName"] = node_name_values
 
         return modularity_optimization_result
 
@@ -257,46 +356,112 @@ class ModularityOptimizationHandler(AlgorithmHandler):
             consecutiveIds=arguments.get("consecutiveIds"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             minCommunitySize=arguments.get("minCommunitySize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class StronglyConnectedComponentsHandler(AlgorithmHandler):
     def strongly_connected_components(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Strongly Connected Components parameters: {kwargs}")
-            strongly_connected_components_result = (
-                self.gds.strongly_connected_components.stream(G, **kwargs)
-            )
+            logger.info(f"Strongly Connected Components parameters: {gds_kwargs}")
+            strongly_connected_components_result = self.gds.scc.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in strongly_connected_components_result["nodeId"]
+            ]
+            strongly_connected_components_result["nodeName"] = node_name_values
 
         return strongly_connected_components_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.strongly_connected_components(
             consecutiveIds=arguments.get("consecutiveIds"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class TriangleCountHandler(AlgorithmHandler):
     def triangle_count(self, **kwargs):
+        # Filter out non-GDS algorithm parameters
+        gds_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in ["nodeIdentifierProperty", "nodes"]
+        }
+
         with projected_graph(self.gds, undirected=True) as G:
-            logger.info(f"Triangle Count parameters: {kwargs}")
-            triangle_count_result = self.gds.triangle_count.stream(G, **kwargs)
+            logger.info(f"Triangle Count parameters: {gds_kwargs}")
+            triangle_count_result = self.gds.triangleCount.stream(G, **gds_kwargs)
+
+        # Get filtering parameters
+        node_names = kwargs.get("nodes", None)
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in triangle_count_result["nodeId"]
+            ]
+            triangle_count_result["nodeName"] = node_name_values
+
+        # Filter results if nodes parameter provided
+        if node_names is not None:
+            if node_identifier_property is None:
+                raise ValueError(
+                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
+                )
+
+            query = f"""
+            UNWIND $names AS name
+            MATCH (s)
+            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
+            RETURN id(s) as node_id
+            """
+            df = self.gds.run_cypher(query, params={"names": node_names})
+            node_ids = df["node_id"].tolist()
+            triangle_count_result = triangle_count_result[
+                triangle_count_result["nodeId"].isin(node_ids)
+            ]
 
         return triangle_count_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.triangle_count(
             maxDegree=arguments.get("maxDegree"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            nodes=arguments.get("nodes"),
         )
 
 
 class WeaklyConnectedComponentsHandler(AlgorithmHandler):
     def weakly_connected_components(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Weakly Connected Components parameters: {kwargs}")
-            weakly_connected_components_result = (
-                self.gds.weakly_connected_components.stream(G, **kwargs)
-            )
+            logger.info(f"Weakly Connected Components parameters: {gds_kwargs}")
+            weakly_connected_components_result = self.gds.wcc.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in weakly_connected_components_result["nodeId"]
+            ]
+            weakly_connected_components_result["nodeName"] = node_name_values
 
         return weakly_connected_components_result
 
@@ -307,16 +472,29 @@ class WeaklyConnectedComponentsHandler(AlgorithmHandler):
             threshold=arguments.get("threshold"),
             consecutiveIds=arguments.get("consecutiveIds"),
             minComponentSize=arguments.get("minComponentSize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class ApproximateMaximumKCutHandler(AlgorithmHandler):
     def approximate_maximum_k_cut(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Approximate Maximum K Cut parameters: {kwargs}")
-            approximate_maximum_k_cut_result = (
-                self.gds.approximate_maximum_k_cut.stream(G, **kwargs)
-            )
+            logger.info(f"Approximate Maximum K Cut parameters: {gds_kwargs}")
+            approximate_maximum_k_cut_result = self.gds.maxkcut.stream(G, **gds_kwargs)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in approximate_maximum_k_cut_result["nodeId"]
+            ]
+            approximate_maximum_k_cut_result["nodeName"] = node_name_values
 
         return approximate_maximum_k_cut_result
 
@@ -327,16 +505,31 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
             vnsMaxNeighborhoodOrder=arguments.get("vnsMaxNeighborhoodOrder"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             minCommunitySize=arguments.get("minCommunitySize"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
     def speaker_listener_label_propagation(self, **kwargs):
+        # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
+        gds_kwargs = {
+            k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
+        }
+
         with projected_graph(self.gds) as G:
-            logger.info(f"Speaker Listener Label Propagation parameters: {kwargs}")
-            speaker_listener_label_propagation_result = (
-                self.gds.speaker_listener_label_propagation.stream(G, **kwargs)
+            logger.info(f"Speaker Listener Label Propagation parameters: {gds_kwargs}")
+            speaker_listener_label_propagation_result = self.gds.sllpa.stream(
+                G, **gds_kwargs
             )
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in speaker_listener_label_propagation_result["nodeId"]
+            ]
+            speaker_listener_label_propagation_result["nodeName"] = node_name_values
 
         return speaker_listener_label_propagation_result
 
@@ -345,4 +538,5 @@ class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
             maxIterations=arguments.get("maxIterations"),
             minAssociationStrength=arguments.get("minAssociationStrength"),
             partitioning=arguments.get("partitioning"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
