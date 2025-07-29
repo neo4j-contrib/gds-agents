@@ -186,6 +186,10 @@ centrality_tool_definitions = [
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
+                "orientation": {
+                    "type": "string",
+                    "description": "The orientation used to compute node degrees. Supported orientations are NATURAL (for out-degree), REVERSE (for in-degree) and UNDIRECTED (for both in-degree and out-degree) ",
+                },
             },
             "required": [],
         },
