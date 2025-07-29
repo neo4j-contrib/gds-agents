@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict
 
-
 from .algorithm_handler import AlgorithmHandler
 from .gds import projected_graph
 
@@ -292,7 +291,13 @@ class ClosenessCentralityHandler(AlgorithmHandler):
 class DegreeCentralityHandler(AlgorithmHandler):
     def degree_centrality(self, **kwargs):
         with projected_graph(self.gds) as G:
-            centrality = self.gds.degree.stream(G)
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodes", "nodeIdentifierProperty"]
+            }
+            logger.info(f"Degree centrality parameters: {params}")
+            centrality = self.gds.degree.stream(G, **params)
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
@@ -332,6 +337,7 @@ class DegreeCentralityHandler(AlgorithmHandler):
         return self.degree_centrality(
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            orientation=arguments.get("orientation"),
         )
 
 
