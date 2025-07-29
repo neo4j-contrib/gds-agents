@@ -117,7 +117,7 @@ class KMeansClusteringHandler(AlgorithmHandler):
                 if v is not None and k not in ["nodeIdentifierProperty"]
             }
             logger.info(f"K-Means Clustering parameters: {params}")
-            kmeans_clustering_result = self.gds.kmeans_clustering.stream(G, **params)
+            kmeans_clustering_result = self.gds.kmeans.stream(G, **params)
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
