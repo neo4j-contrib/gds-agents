@@ -1,4 +1,4 @@
-# Changelog - [0.2.0] - yyyy-mm-dd
+# Changelog - [0.2.0] - 2025-07-30
 
 ### New Features
 1. Project all (non-string) node properties using the appropriate (integer/float) types.
