@@ -5,6 +5,8 @@
 
 ### Bug Fixes
 
+* Fix a bug with loading node properties correctly.
+
 
 ### Other Changes
 
