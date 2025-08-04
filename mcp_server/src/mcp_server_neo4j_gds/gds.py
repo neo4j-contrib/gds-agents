@@ -73,7 +73,8 @@ def projected_graph(gds, undirected=False):
         node_properties = gds.run_cypher(
             "MATCH (n) RETURN DISTINCT keys(properties(n))"
         )["keys(properties(n))"][0]
-        valid_node_properties = {}
+        valid_node_properties_source = {}
+        valid_node_properties_target = {}
         for i in range(len(node_properties)):
             # Check property types and whether all values are whole numbers
             type_check = gds.run_cypher(
@@ -100,19 +101,31 @@ def projected_graph(gds, undirected=False):
                     whole_numbers = type_check["IS_WHOLE_NUMBER"].dropna()
                     if len(whole_numbers) > 0 and all(whole_numbers):
                         # All values are whole numbers - use as integer
-                        valid_node_properties[node_properties[i]] = (
+                        valid_node_properties_source[node_properties[i]] = (
                             f"n.{node_properties[i]}"
+                        )
+                        valid_node_properties_target[node_properties[i]] = (
+                            f"m.{node_properties[i]}"
                         )
                     else:
                         # Has decimal values - use as float
-                        valid_node_properties[node_properties[i]] = (
+                        valid_node_properties_source[node_properties[i]] = (
                             f"toFloat(n.{node_properties[i]})"
                         )
+                        valid_node_properties_target[node_properties[i]] = (
+                            f"toFloat(m.{node_properties[i]})"
+                        )
 
-        node_prop_map = ", ".join(
-            f"{prop}: {expr}" for prop, expr in valid_node_properties.items()
+        node_prop_map_source = ", ".join(
+            f"{prop}: {expr}" for prop, expr in valid_node_properties_source.items()
         )
-        logger.info(f"Node property map: '{node_prop_map}'")
+
+        node_prop_map_target = ", ".join(
+            f"{prop}: {expr}" for prop, expr in valid_node_properties_target.items()
+        )
+        logger.info(f"Node property map source: '{node_prop_map_source}'")
+        logger.info(f"Node property map target: '{node_prop_map_target}'")
+
         # Configure graph projection based on undirected parameter
         # Create data configuration (node/relationship structure)
         data_config_parts = [
@@ -121,11 +134,11 @@ def projected_graph(gds, undirected=False):
             "relationshipType: type(r)",
         ]
 
-        if node_prop_map:
+        if node_prop_map_source or node_prop_map_target:
             data_config_parts.extend(
                 [
-                    f"sourceNodeProperties: {{{node_prop_map}}}",
-                    f"targetNodeProperties: {{{node_prop_map}}}",
+                    f"sourceNodeProperties: {{{node_prop_map_source}}}",
+                    f"targetNodeProperties: {{{node_prop_map_target}}}",
                 ]
             )
 
