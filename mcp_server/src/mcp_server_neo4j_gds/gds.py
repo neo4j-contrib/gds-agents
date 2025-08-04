@@ -210,3 +210,15 @@ def get_node_properties_keys(gds: GraphDataScience):
         if df.empty:
             return []
         return df["properties_keys"].iloc[0]
+
+
+def get_relationship_properties_keys(gds: GraphDataScience):
+    with projected_graph(gds):
+        query = """
+        MATCH (n)-[r]->(m)
+        RETURN DISTINCT keys(properties(r)) AS properties_keys
+        """
+        df = gds.run_cypher(query)
+        if df.empty:
+            return []
+        return df["properties_keys"].iloc[0]
