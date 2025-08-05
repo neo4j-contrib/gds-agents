@@ -1066,12 +1066,34 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
 
 class LongestPathHandler(AlgorithmHandler):
     def longest_path(self, **kwargs):
+        # Process target nodes if provided
+        target_node_ids = []
+        if "targetNodes" in kwargs and kwargs["targetNodes"]:
+            node_identifier_property = kwargs.get("nodeIdentifierProperty")
+            if not node_identifier_property:
+                return {
+                    "found": False,
+                    "message": "nodeIdentifierProperty is required when targetNodes are provided",
+                }
+
+            for target_name in kwargs["targetNodes"]:
+                target_query = f"""
+                MATCH (target)
+                WHERE toLower(target.{node_identifier_property}) CONTAINS toLower($target_name)
+                RETURN id(target) as target_id
+                """
+                target_df = self.gds.run_cypher(
+                    target_query, params={"target_name": target_name}
+                )
+                if not target_df.empty:
+                    target_node_ids.append(int(target_df["target_id"].iloc[0]))
+
         with projected_graph(self.gds) as G:
             # Prepare parameters for the longest path algorithm, excluding our internal parameters
             params = {
                 k: v
                 for k, v in kwargs.items()
-                if v is not None and k != "nodeIdentifierProperty"
+                if v is not None and k not in ["nodeIdentifierProperty", "targetNodes"]
             }
             logger.info(f"Longest Path parameters: {params}")
 
@@ -1094,6 +1116,10 @@ class LongestPathHandler(AlgorithmHandler):
                 total_cost = float(row["totalCost"])
                 node_ids = row["nodeIds"]
                 costs = row["costs"]
+
+                # Filter by target nodes if specified
+                if target_node_ids and target_node not in target_node_ids:
+                    continue
 
                 # Convert arrays to lists if needed
                 if hasattr(node_ids, "tolist"):
@@ -1123,5 +1149,7 @@ class LongestPathHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.longest_path(
-            relationshipWeightProperty=arguments.get("relationshipWeightProperty")
+            targetNodes=arguments.get("targetNodes"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )

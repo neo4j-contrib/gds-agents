@@ -452,10 +452,19 @@ path_tool_definitions = [
         inputSchema={
             "type": "object",
             "properties": {
+                "targetNodes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of target node names to filter results. Only paths ending at these nodes will be returned.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties. Required when targetNodes is specified.",
+                },
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
-                }
+                },
             },
             "required": [],
         },

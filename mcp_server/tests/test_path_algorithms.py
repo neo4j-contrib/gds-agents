@@ -598,3 +598,24 @@ async def test_longest_path(mcp_client):
     assert "paths" in result_data
     paths = result_data["paths"]
     assert len(paths) == 301
+
+    # Test with targetNodes filtering
+    result_filtered = await mcp_client.call_tool(
+        "longest_path",
+        {
+            "targetNodes": ["Notting Hill Gate"],
+            "nodeIdentifierProperty": "name",
+            "relationshipWeightProperty": "time",
+        },
+    )
+
+    assert len(result_filtered) == 1
+    result_filtered_text = result_filtered[0]["text"]
+    result_filtered_data = json.loads(result_filtered_text)
+
+    assert result_filtered_data["found"] is True
+    assert "paths" in result_filtered_data
+
+    filtered_paths = result_filtered_data["paths"]
+    assert len(filtered_paths) == 1
+    assert result_filtered_data["paths"][0]["costs"] == [0.0, 3.0, 6.0, 10.0, 13.0]
