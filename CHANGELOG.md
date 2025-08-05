@@ -5,8 +5,7 @@
 
 ### Bug Fixes
 1. Return node names in several path algorithms that only returned node ids.
-
-* Fix a bug with loading node properties correctly.
+2. Fix a bug with loading node properties correctly.
 
 
 ### Other Changes
