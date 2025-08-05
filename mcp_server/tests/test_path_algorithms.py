@@ -317,6 +317,8 @@ async def test_minimum_directed_steiner_tree(mcp_client):
     first_edge = edges[0]
     assert "nodeId" in first_edge
     assert "parentId" in first_edge
+    assert "nodeName" in first_edge
+    assert "parentName" in first_edge
     assert "weight" in first_edge
     assert first_edge["weight"] > 0
 
@@ -360,6 +362,8 @@ async def test_prize_collecting_steiner_tree(mcp_client):
     first_edge = edges[0]
     assert "nodeId" in first_edge
     assert "parentId" in first_edge
+    assert "nodeName" in first_edge
+    assert "parentName" in first_edge
     assert "weight" in first_edge
     assert first_edge["weight"] > 0
 
@@ -388,6 +392,8 @@ async def test_all_pairs_shortest_paths(mcp_client):
     first_path = paths[0]
     assert "sourceNodeId" in first_path
     assert "targetNodeId" in first_path
+    assert "sourceNodeName" in first_path
+    assert "targetNodeName" in first_path
     assert "distance" in first_path
 
     distance = first_path["distance"]

@@ -562,10 +562,16 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
 
                 total_weight += weight
 
+                # Get node names using GDS utility function
+                node_name = self.gds.util.asNode(node_id)
+                parent_name = self.gds.util.asNode(parent_id)
+
                 edges.append(
                     {
                         "nodeId": node_id,
                         "parentId": parent_id,
+                        "nodeName": node_name,
+                        "parentName": parent_name,
                         "weight": weight,
                     }
                 )
@@ -590,7 +596,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
 class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
     def prize_collecting_steiner_tree(self, **kwargs):
         with projected_graph(self.gds, undirected=True) as G:
-            # If any optional parameter is not None, use that parameter
+            # Prepare parameters for the algorithm
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Prize-Collecting Steiner Tree parameters: {params}")
 
@@ -618,10 +624,16 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
 
                 total_weight += weight
 
+                # Get node names using GDS utility function if available
+                node_name = self.gds.util.asNode(node_id)
+                parent_name = self.gds.util.asNode(parent_id)
+
                 edges.append(
                     {
                         "nodeId": node_id,
                         "parentId": parent_id,
+                        "nodeName": node_name,
+                        "parentName": parent_name,
                         "weight": weight,
                     }
                 )
@@ -660,10 +672,16 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
                 target_id = int(row["targetNodeId"])
                 distance = float(row["distance"])
 
+                # Get node names using GDS utility function
+                source_name = self.gds.util.asNode(source_id)
+                target_name = self.gds.util.asNode(target_id)
+
                 paths.append(
                     {
                         "sourceNodeId": source_id,
                         "targetNodeId": target_id,
+                        "sourceNodeName": source_name,
+                        "targetNodeName": target_name,
                         "distance": distance,
                     }
                 )
