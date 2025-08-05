@@ -12,7 +12,7 @@ from .centrality_algorithm_specs import centrality_tool_definitions
 from .community_algorithm_specs import community_tool_definitions
 from .path_algorithm_specs import path_tool_definitions
 from .registry import AlgorithmRegistry
-from .gds import count_nodes, get_node_properties_keys
+from .gds import count_nodes, get_node_properties_keys, get_relationship_properties_keys
 
 logger = logging.getLogger("mcp_server_neo4j_gds")
 
@@ -80,6 +80,13 @@ async def main(db_url: str, username: str, password: str, database: str = None):
                             "type": "object",
                         },
                     ),
+                    types.Tool(
+                        name="get_relationship_properties_keys",
+                        description="""Get all relationship properties keys in the database""",
+                        inputSchema={
+                            "type": "object",
+                        },
+                    ),
                 ]
                 + centrality_tool_definitions
                 + community_tool_definitions
@@ -103,6 +110,10 @@ async def main(db_url: str, username: str, password: str, database: str = None):
 
             elif name == "get_node_properties_keys":
                 result = get_node_properties_keys(gds)
+                return [types.TextContent(type="text", text=serialize_result(result))]
+
+            elif name == "get_relationship_properties_keys":
+                result = get_relationship_properties_keys(gds)
                 return [types.TextContent(type="text", text=serialize_result(result))]
 
             else:

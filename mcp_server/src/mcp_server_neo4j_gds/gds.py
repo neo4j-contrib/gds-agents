@@ -158,8 +158,7 @@ def projected_graph(gds, undirected=False):
 
         # Use separate data and additional configuration parameters
         if additional_config:
-            G, _ = gds.graph.cypher.project(
-                f"""
+            project_query = f"""
                        MATCH (n)-[r]->(m)
                        WITH n, r, m
                        RETURN gds.graph.project(
@@ -169,12 +168,14 @@ def projected_graph(gds, undirected=False):
                            {{{data_config}}},
                            {{{additional_config}}}
                        )
-                       """,
+                       """
+            logger.info(f"Project query: '{project_query}'")
+            G, _ = gds.graph.cypher.project(
+                project_query,
                 graph_name=graph_name,
             )
         else:
-            G, _ = gds.graph.cypher.project(
-                f"""
+            projection_query = f"""
                        MATCH (n)-[r]->(m)
                        WITH n, r, m
                        RETURN gds.graph.project(
@@ -183,7 +184,10 @@ def projected_graph(gds, undirected=False):
                            m,
                            {{{data_config}}}
                        )
-                       """,
+                       """
+            logger.info(f"Projection query: '{projection_query}'")
+            G, _ = gds.graph.cypher.project(
+                projection_query,
                 graph_name=graph_name,
             )
         yield G
@@ -201,6 +205,18 @@ def get_node_properties_keys(gds: GraphDataScience):
         query = """
         MATCH (n)
         RETURN DISTINCT keys(properties(n)) AS properties_keys
+        """
+        df = gds.run_cypher(query)
+        if df.empty:
+            return []
+        return df["properties_keys"].iloc[0]
+
+
+def get_relationship_properties_keys(gds: GraphDataScience):
+    with projected_graph(gds):
+        query = """
+        MATCH (n)-[r]->(m)
+        RETURN DISTINCT keys(properties(r)) AS properties_keys
         """
         df = gds.run_cypher(query)
         if df.empty:
