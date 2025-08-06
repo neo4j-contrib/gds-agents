@@ -10,7 +10,12 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 class DijkstraShortestPathHandler(AlgorithmHandler):
     def find_shortest_path(
-        self, start_node: str, end_node: str, node_identifier_property: str, **kwargs
+        self,
+        start_node: str,
+        end_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (start)
@@ -30,7 +35,7 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
         start_node_id = int(df["start_id"].iloc[0])
         end_node_id = int(df["end_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None}
@@ -72,13 +77,18 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
             arguments.get("start_node"),
             arguments.get("end_node"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationship_property"),
         )
 
 
 class DeltaSteppingShortestPathHandler(AlgorithmHandler):
     def delta_stepping_shortest_path(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (source)
@@ -93,7 +103,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df["source_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Delta-Stepping shortest path parameters: {params}")
@@ -153,6 +163,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
         return self.delta_stepping_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             delta=arguments.get("delta"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
@@ -160,7 +171,11 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
 class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
     def dijkstra_single_source_shortest_path(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (source)
@@ -175,7 +190,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df["source_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
@@ -234,6 +249,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
         return self.dijkstra_single_source_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
@@ -244,6 +260,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         source_node: str,
         target_node: str,
         node_identifier_property: str,
+        undirected: bool = False,
         **kwargs,
     ):
         query = f"""
@@ -264,7 +281,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         source_node_id = int(df["source_id"].iloc[0])
         target_node_id = int(df["target_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"A* shortest path parameters: {params}")
@@ -305,6 +322,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             latitudeProperty=arguments.get("latitudeProperty"),
             longitudeProperty=arguments.get("longitudeProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
