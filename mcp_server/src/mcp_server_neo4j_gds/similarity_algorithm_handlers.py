@@ -159,19 +159,35 @@ class FilteredNodeSimilarityHandler(AlgorithmHandler):
 
 
 class KNearestNeighborsHandler(AlgorithmHandler):
-    def k_nearest_neighbors(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            logger.info(f"K-Nearest Neighbors parameters: {kwargs}")
-            k_nearest_neighbors_result = gds.knn.stream(G, **kwargs)
+    def k_nearest_neighbors(self, **kwargs):
+        with projected_graph(self.gds) as G:
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodeIdentifierProperty"]
+            }
+            logger.info(f"K-Nearest Neighbors parameters: {params}")
+            k_nearest_neighbors_result = self.gds.knn.stream(G, **params)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node1_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in k_nearest_neighbors_result["node1"]
+            ]
+            node2_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in k_nearest_neighbors_result["node2"]
+            ]
+            k_nearest_neighbors_result["node1Name"] = node1_name_values
+            k_nearest_neighbors_result["node2Name"] = node2_name_values
 
         return k_nearest_neighbors_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.k_nearest_neighbors(
-            self.db_url,
-            self.username,
-            self.password,
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             nodeProperties=arguments.get("nodeProperties"),
             topK=arguments.get("topK"),
             sampleRate=arguments.get("sampleRate"),
