@@ -10,19 +10,35 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class NodeSimilarityHandler(AlgorithmHandler):
-    def node_similarity(self, db_url: str, username: str, password: str, **kwargs):
-        gds = GraphDataScience(db_url, auth=(username, password), aura_ds=False)
-        with projected_graph(gds) as G:
-            logger.info(f"Node Similarity parameters: {kwargs}")
-            node_similarity_result = gds.nodeSimilarity.stream(G, **kwargs)
+    def node_similarity(self, **kwargs):
+        with projected_graph(self.gds) as G:
+            params = {
+                k: v
+                for k, v in kwargs.items()
+                if v is not None and k not in ["nodeIdentifierProperty"]
+            }
+            logger.info(f"Node Similarity parameters: {params}")
+            node_similarity_result = self.gds.nodeSimilarity.stream(G, **params)
+
+        # Add node names to the results if nodeIdentifierProperty is provided
+        node_identifier_property = kwargs.get("nodeIdentifierProperty")
+        if node_identifier_property is not None:
+            node1_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in node_similarity_result["node1"]
+            ]
+            node2_name_values = [
+                self.gds.util.asNode(node_id).get(node_identifier_property)
+                for node_id in node_similarity_result["node2"]
+            ]
+            node_similarity_result["node1Name"] = node1_name_values
+            node_similarity_result["node2Name"] = node2_name_values
 
         return node_similarity_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.node_similarity(
-            self.db_url,
-            self.username,
-            self.password,
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             similarityCutoff=arguments.get("similarityCutoff"),
             degreeCutoff=arguments.get("degreeCutoff"),
             upperDegreeCutoff=arguments.get("upperDegreeCutoff"),
