@@ -114,6 +114,10 @@ similarity_tool_definitions = [
                     "type": "boolean",
                     "description": "If enabled, Node Similarity will use components to improve the performance of the computation, skipping comparisons of nodes in different components. Set to false (Default): the algorithm does not use components, but computes similarity across the entire graph. Set to true: the algorithm uses components, and will compute these components before computing similarity. Set to String: use pre-computed components stored in graph, String is the key for a node property representing components.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
             },
         },
     ),
@@ -178,6 +182,10 @@ similarity_tool_definitions = [
                     "type": "number",
                     "description": "The probability of replacing the least similar known neighbor with an encountered neighbor of equal similarity.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
             },
             "required": ["nodeProperties"],
         },
@@ -235,10 +243,14 @@ similarity_tool_definitions = [
                 },
                 "seedTargetNodes": {
                     "type": "boolean",
-                    "description": "Enable seeding of target nodes.",
+                    "description": "Enable seeding of target nodes. If seeded, every node picks some of the target nodes initially. This guarantees that for every node we can avoid empty result (when the algorithm did not find for it any similar neighbors from the target set). Can only be used if targetNodeFilter is set.",
+                },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
             },
-            "required": ["sourceNodeFilter", "targetNodeFilter", "nodeProperties"],
+            "required": ["nodeProperties"],
         },
     ),
 ]
