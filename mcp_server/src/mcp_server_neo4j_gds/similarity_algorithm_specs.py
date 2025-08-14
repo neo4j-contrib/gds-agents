@@ -51,6 +51,10 @@ similarity_tool_definitions = [
                     "type": "boolean",
                     "description": "If enabled, Node Similarity will use components to improve the performance of the computation, skipping comparisons of nodes in different components. Set to false (Default): the algorithm does not use components, but computes similarity across the entire graph. Set to true: the algorithm uses components, and will compute these components before computing similarity. Set to String: use pre-computed components stored in graph, String is the key for a node property representing components.",
                 },
+                "nodeIdentifierProperty": {
+                    "type": "string",
+                    "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
+                },
             },
         },
     ),
@@ -111,7 +115,6 @@ similarity_tool_definitions = [
                     "description": "If enabled, Node Similarity will use components to improve the performance of the computation, skipping comparisons of nodes in different components. Set to false (Default): the algorithm does not use components, but computes similarity across the entire graph. Set to true: the algorithm uses components, and will compute these components before computing similarity. Set to String: use pre-computed components stored in graph, String is the key for a node property representing components.",
                 },
             },
-            "required": ["sourceNodeFilter", "targetNodeFilter"],
         },
     ),
     types.Tool(
