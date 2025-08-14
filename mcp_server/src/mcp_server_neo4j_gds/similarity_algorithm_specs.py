@@ -117,7 +117,7 @@ similarity_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
-                }
+                },
             },
         },
     ),
@@ -185,7 +185,7 @@ similarity_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
-                }
+                },
             },
             "required": ["nodeProperties"],
         },
@@ -243,14 +243,14 @@ similarity_tool_definitions = [
                 },
                 "seedTargetNodes": {
                     "type": "boolean",
-                    "description": "Enable seeding of target nodes.",
+                    "description": "Enable seeding of target nodes. If seeded, every node picks some of the target nodes initially. This guarantees that for every node we can avoid empty result (when the algorithm did not find for it any similar neighbors from the target set). Can only be used if targetNodeFilter is set.",
                 },
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
-                }
+                },
             },
-            "required": ["sourceNodeFilter", "targetNodeFilter", "nodeProperties"],
+            "required": ["nodeProperties"],
         },
     ),
 ]
