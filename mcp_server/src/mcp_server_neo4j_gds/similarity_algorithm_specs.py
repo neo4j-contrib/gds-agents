@@ -87,7 +87,7 @@ similarity_tool_definitions = [
                 },
                 "topK": {
                     "type": "integer",
-                    "description": "Limit on the number of scores per node. The K largest results are returned. This value cannot be lower than 1.",
+                    "description": "Limit on the number of scores per node. The K largest results are returned. This value cannot be lower than 1. Use this instead of topN whenever the sourceNode consists of a single node, or it is specifically stated that results are to be computed for each source node",
                 },
                 "bottomK": {
                     "type": "integer",
