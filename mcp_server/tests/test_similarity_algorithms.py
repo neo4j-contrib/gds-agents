@@ -27,7 +27,7 @@ async def test_node_similarity(mcp_client):
 async def test_filtered_node_similarity(mcp_client):
     # test source-filter only
     result = await mcp_client.call_tool(
-        "filtered_node_similarity",
+        "node_similarity",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,
@@ -51,7 +51,7 @@ async def test_filtered_node_similarity(mcp_client):
     # test target-filter alone
 
     result = await mcp_client.call_tool(
-        "filtered_node_similarity",
+        "node_similarity",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,
@@ -73,7 +73,7 @@ async def test_filtered_node_similarity(mcp_client):
 
     # test combination of filters
     result = await mcp_client.call_tool(
-        "filtered_node_similarity",
+        "node_similarity",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,
@@ -123,7 +123,7 @@ async def test_k_nearest_neighbors(mcp_client):
 async def test_filtered_knn(mcp_client):
     # test source-filter only
     result = await mcp_client.call_tool(
-        "filtered_k_nearest_neighbors",
+        "k_nearest_neighbors",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,
@@ -148,7 +148,7 @@ async def test_filtered_knn(mcp_client):
     # test target-filter alone
 
     result = await mcp_client.call_tool(
-        "filtered_k_nearest_neighbors",
+        "k_nearest_neighbors",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,
@@ -171,7 +171,7 @@ async def test_filtered_knn(mcp_client):
 
     # test combination of filters
     result = await mcp_client.call_tool(
-        "filtered_node_similarity",
+        "k_nearest_neighbors",
         {
             "nodeIdentifierProperty": "name",
             "topK": 3,

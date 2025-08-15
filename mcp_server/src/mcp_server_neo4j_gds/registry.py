@@ -34,9 +34,7 @@ from .community_algorithm_handlers import (
 )
 from .similarity_algorithm_handlers import (
     NodeSimilarityHandler,
-    FilteredNodeSimilarityHandler,
     KNearestNeighborsHandler,
-    FilteredKNearestNeighborsHandler,
 )
 from .path_algorithm_handlers import (
     DijkstraShortestPathHandler,
@@ -89,9 +87,7 @@ class AlgorithmRegistry:
         "speaker_listener_label_propagation": SpeakerListenerLabelPropagationHandler,
         # Similarity algorithms
         "node_similarity": NodeSimilarityHandler,
-        "filtered_node_similarity": FilteredNodeSimilarityHandler,
         "k_nearest_neighbors": KNearestNeighborsHandler,
-        "filtered_k_nearest_neighbors": FilteredKNearestNeighborsHandler,
         # Path finding algorithms
         "find_shortest_path": DijkstraShortestPathHandler,
         "delta_stepping_shortest_path": DeltaSteppingShortestPathHandler,

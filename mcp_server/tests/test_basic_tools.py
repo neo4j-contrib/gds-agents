@@ -72,9 +72,7 @@ async def test_list_tools(mcp_client):
         "longest_path",
         # similarity
         "node_similarity",
-        "filtered_node_similarity",
         "k_nearest_neighbors",
-        "filtered_k_nearest_neighbors",
     ]
 
     # Check that we have the expected tools
