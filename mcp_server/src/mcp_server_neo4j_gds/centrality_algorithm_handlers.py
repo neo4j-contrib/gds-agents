@@ -13,8 +13,8 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class ArticleRankHandler(AlgorithmHandler):
-    def article_rank(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def article_rank(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {
@@ -46,6 +46,7 @@ class ArticleRankHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.article_rank(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             sourceNodes=arguments.get("sourceNodes"),
@@ -57,8 +58,8 @@ class ArticleRankHandler(AlgorithmHandler):
 
 
 class ArticulationPointsHandler(AlgorithmHandler):
-    def articulation_points(self, **kwargs):
-        with projected_graph(self.gds, undirected=True) as G:
+    def articulation_points(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             articulation_points = self.gds.articulationPoints.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
@@ -70,13 +71,14 @@ class ArticulationPointsHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.articulation_points(
-            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+            undirected=arguments.get("undirected", False),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class BetweennessCentralityHandler(AlgorithmHandler):
-    def betweenness_centrality(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def betweenness_centrality(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -99,6 +101,7 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.betweenness_centrality(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             samplingSize=arguments.get("samplingSize"),
@@ -107,8 +110,8 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
 
 class BridgesHandler(AlgorithmHandler):
-    def bridges(self, **kwargs):
-        with projected_graph(self.gds, undirected=True) as G:
+    def bridges(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             bridges_result = self.gds.bridges.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
@@ -124,13 +127,14 @@ class BridgesHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.bridges(
-            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
+            undirected=arguments.get("undirected", False),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class CELFHandler(AlgorithmHandler):
-    def celf(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def celf(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -147,6 +151,7 @@ class CELFHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.celf(
+            undirected=arguments.get("undirected", False),
             seedSetSize=arguments.get("seedSetSize"),
             monteCarloSimulations=arguments.get("monteCarloSimulations"),
             propagationProbability=arguments.get("propagationProbability"),
@@ -155,8 +160,8 @@ class CELFHandler(AlgorithmHandler):
 
 
 class ClosenessCentralityHandler(AlgorithmHandler):
-    def closeness_centrality(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def closeness_centrality(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -174,11 +179,11 @@ class ClosenessCentralityHandler(AlgorithmHandler):
         centrality = filter_identifiers(
             self.gds, node_identifier_property, node_names, centrality
         )
-
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.closeness_centrality(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             useWassermanFaust=arguments.get("useWassermanFaust"),
@@ -186,8 +191,8 @@ class ClosenessCentralityHandler(AlgorithmHandler):
 
 
 class DegreeCentralityHandler(AlgorithmHandler):
-    def degree_centrality(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def degree_centrality(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -210,6 +215,7 @@ class DegreeCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.degree_centrality(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             orientation=arguments.get("orientation"),
@@ -217,8 +223,8 @@ class DegreeCentralityHandler(AlgorithmHandler):
 
 
 class EigenvectorCentralityHandler(AlgorithmHandler):
-    def eigenvector_centrality(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def eigenvector_centrality(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -250,6 +256,7 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.eigenvector_centrality(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             maxIterations=arguments.get("maxIterations"),
@@ -261,8 +268,8 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
 
 
 class PageRankHandler(AlgorithmHandler):
-    def pagerank(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def pagerank(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -293,6 +300,7 @@ class PageRankHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.pagerank(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             sourceNodes=arguments.get("sourceNodes"),
@@ -303,8 +311,8 @@ class PageRankHandler(AlgorithmHandler):
 
 
 class HarmonicCentralityHandler(AlgorithmHandler):
-    def harmonic_centrality(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def harmonic_centrality(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             centrality = self.gds.closeness.harmonic.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
@@ -320,14 +328,15 @@ class HarmonicCentralityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.harmonic_centrality(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
 
 class HITSHandler(AlgorithmHandler):
-    def hits(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def hits(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -349,6 +358,7 @@ class HITSHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.hits(
+            undirected=arguments.get("undirected", False),
             nodes=arguments.get("nodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             hitsIterations=arguments.get("hitsIterations"),

@@ -716,7 +716,7 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.all_pairs_shortest_paths(
             undirected=arguments.get("undirected", False),
-            relationshipWeightProperty=arguments.get("relationshipWeightProperty")
+            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
@@ -807,7 +807,11 @@ class RandomWalkHandler(AlgorithmHandler):
 
 class BreadthFirstSearchHandler(AlgorithmHandler):
     def breadth_first_search(
-        self, source_node: str, node_identifier_property: str, undirected: bool = False, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""
@@ -905,7 +909,11 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
 
 class DepthFirstSearchHandler(AlgorithmHandler):
     def depth_first_search(
-        self, source_node: str, node_identifier_property: str, undirected: bool = False, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""
@@ -1003,7 +1011,11 @@ class DepthFirstSearchHandler(AlgorithmHandler):
 
 class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
     def bellman_ford_single_source_shortest_path(
-        self, source_node: str, node_identifier_property: str, undirected: bool = False, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""

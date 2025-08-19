@@ -317,7 +317,7 @@ path_tool_definitions = [
                 "undirected": {
                     "type": "boolean",
                     "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                }
+                },
             },
             "required": [],
         },
