@@ -59,7 +59,7 @@ class ArticleRankHandler(AlgorithmHandler):
 
 class ArticulationPointsHandler(AlgorithmHandler):
     def articulation_points(self, **kwargs):
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=True) as G:
             articulation_points = self.gds.articulationPoints.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
@@ -71,7 +71,7 @@ class ArticulationPointsHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.articulation_points(
-            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
+            nodeIdentifierProperty=arguments.get("nodeIdentifierProperty")
         )
 
 
