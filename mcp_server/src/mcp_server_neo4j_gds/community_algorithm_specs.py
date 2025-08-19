@@ -17,6 +17,10 @@ community_tool_definitions = [
                     "description": "The relationship property that holds the weight of the relationships. "
                     "If not provided, all relationships are considered to have a weight of 1.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
             "required": ["communityProperty"],
         },
@@ -104,6 +108,10 @@ community_tool_definitions = [
                 "minCommunitySize": {
                     "type": "integer",
                     "description": "Only nodes inside communities larger or equal the given value are returned.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": [],
@@ -201,6 +209,10 @@ community_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
         },
@@ -325,6 +337,10 @@ community_tool_definitions = [
                     "type": "string",
                     "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
         },
     ),
@@ -343,6 +359,10 @@ community_tool_definitions = [
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": ["communityProperty"],
@@ -384,6 +404,10 @@ community_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
         },

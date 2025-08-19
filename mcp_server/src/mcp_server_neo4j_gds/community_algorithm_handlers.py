@@ -13,8 +13,8 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class ConductanceHandler(AlgorithmHandler):
-    def conductance(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def conductance(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Conductance parameters: {kwargs}")
             conductance = self.gds.conductance.stream(G, **kwargs)
 
@@ -22,6 +22,7 @@ class ConductanceHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.conductance(
+            undirected=arguments.get("undirected", False),
             communityProperty=arguments.get("communityProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
@@ -74,8 +75,8 @@ class KCoreDecompositionHandler(AlgorithmHandler):
 
 
 class K1ColoringHandler(AlgorithmHandler):
-    def k_1_coloring(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def k_1_coloring(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -94,6 +95,7 @@ class K1ColoringHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.k_1_coloring(
+            undirected=arguments.get("undirected", False),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             maxIterations=arguments.get("maxIterations"),
             minCommunitySize=arguments.get("minCommunitySize"),
@@ -134,13 +136,13 @@ class KMeansClusteringHandler(AlgorithmHandler):
 
 
 class LabelPropagationHandler(AlgorithmHandler):
-    def label_propagation(self, **kwargs):
+    def label_propagation(self, undirected: bool = False, **kwargs):
         # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
         gds_kwargs = {
             k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
         }
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Label Propagation parameters: {gds_kwargs}")
             label_propagation_result = self.gds.labelPropagation.stream(G, **gds_kwargs)
 
@@ -154,6 +156,7 @@ class LabelPropagationHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.label_propagation(
+            undirected=arguments.get("undirected", False),
             maxIterations=arguments.get("maxIterations"),
             nodeWeightProperty=arguments.get("nodeWeightProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -239,13 +242,13 @@ class LocalClusteringCoefficientHandler(AlgorithmHandler):
 
 
 class LouvainHandler(AlgorithmHandler):
-    def louvain(self, **kwargs):
+    def louvain(self, undirected: bool = False, **kwargs):
         # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
         gds_kwargs = {
             k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
         }
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Louvain parameters: {gds_kwargs}")
             louvain_result = self.gds.louvain.stream(G, **gds_kwargs)
 
@@ -257,6 +260,7 @@ class LouvainHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.louvain(
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             seedProperty=arguments.get("seedProperty"),
             maxLevels=arguments.get("maxLevels"),
@@ -272,8 +276,8 @@ class LouvainHandler(AlgorithmHandler):
 
 
 class ModularityMetricHandler(AlgorithmHandler):
-    def modularity_metric(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def modularity_metric(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Modularity Metric parameters: {kwargs}")
             modularity_metric_result = self.gds.modularity.stream(G, **kwargs)
 
@@ -281,19 +285,20 @@ class ModularityMetricHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.modularity_metric(
+            undirected=arguments.get("undirected", False),
             communityProperty=arguments.get("communityProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class ModularityOptimizationHandler(AlgorithmHandler):
-    def modularity_optimization(self, **kwargs):
+    def modularity_optimization(self, undirected: bool = False, **kwargs):
         # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
         gds_kwargs = {
             k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
         }
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Modularity Optimization parameters: {gds_kwargs}")
             modularity_optimization_result = self.gds.modularityOptimization.stream(
                 G, **gds_kwargs
@@ -309,6 +314,7 @@ class ModularityOptimizationHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.modularity_optimization(
+            undirected=arguments.get("undirected", False),
             maxIterations=arguments.get("maxIterations"),
             tolerance=arguments.get("tolerance"),
             seedProperty=arguments.get("seedProperty"),
