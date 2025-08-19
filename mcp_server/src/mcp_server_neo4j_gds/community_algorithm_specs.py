@@ -534,6 +534,10 @@ community_tool_definitions = [
                     "type": "string",
                     "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
         },
     ),
@@ -562,6 +566,10 @@ community_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "The name of a node property to use as node identifier in the result. If provided, the result will include a 'nodeName' column with values from this property.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
         },

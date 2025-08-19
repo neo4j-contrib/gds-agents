@@ -419,13 +419,13 @@ class WeaklyConnectedComponentsHandler(AlgorithmHandler):
 
 
 class ApproximateMaximumKCutHandler(AlgorithmHandler):
-    def approximate_maximum_k_cut(self, **kwargs):
+    def approximate_maximum_k_cut(self, undirected: bool = False, **kwargs):
         # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
         gds_kwargs = {
             k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
         }
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Approximate Maximum K Cut parameters: {gds_kwargs}")
             approximate_maximum_k_cut_result = self.gds.maxkcut.stream(G, **gds_kwargs)
 
@@ -439,6 +439,7 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.approximate_maximum_k_cut(
+            undirected=arguments.get("undirected", False),
             k=arguments.get("k"),
             iterations=arguments.get("iterations"),
             vnsMaxNeighborhoodOrder=arguments.get("vnsMaxNeighborhoodOrder"),
@@ -449,13 +450,13 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
 
 
 class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
-    def speaker_listener_label_propagation(self, **kwargs):
+    def speaker_listener_label_propagation(self, undirected: bool = False, **kwargs):
         # Filter out nodeIdentifierProperty as it's not a GDS algorithm parameter
         gds_kwargs = {
             k: v for k, v in kwargs.items() if k not in ["nodeIdentifierProperty"]
         }
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             logger.info(f"Speaker Listener Label Propagation parameters: {gds_kwargs}")
             speaker_listener_label_propagation_result = self.gds.sllpa.stream(
                 G, **gds_kwargs
@@ -473,6 +474,7 @@ class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.speaker_listener_label_propagation(
+            undirected=arguments.get("undirected", False),
             maxIterations=arguments.get("maxIterations"),
             minAssociationStrength=arguments.get("minAssociationStrength"),
             partitioning=arguments.get("partitioning"),
