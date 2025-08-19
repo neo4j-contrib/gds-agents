@@ -109,8 +109,8 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
 
 class BridgesHandler(AlgorithmHandler):
-    def bridges(self, undirected: bool = False, **kwargs):
-        with projected_graph(self.gds, undirected=undirected) as G:
+    def bridges(self, **kwargs):
+        with projected_graph(self.gds, undirected=True) as G:
             bridges_result = self.gds.bridges.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
@@ -126,7 +126,6 @@ class BridgesHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.bridges(
-            undirected=arguments.get("undirected", False),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
         )
 
