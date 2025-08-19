@@ -8,6 +8,8 @@ import mcp.server.stdio
 import pandas as pd
 import json
 from graphdatascience import GraphDataScience
+
+from .similarity_algorithm_specs import similarity_tool_definitions
 from .centrality_algorithm_specs import centrality_tool_definitions
 from .community_algorithm_specs import community_tool_definitions
 from .path_algorithm_specs import path_tool_definitions
@@ -91,6 +93,7 @@ async def main(db_url: str, username: str, password: str, database: str = None):
                 + centrality_tool_definitions
                 + community_tool_definitions
                 + path_tool_definitions
+                + similarity_tool_definitions
             )
             logger.info(f"Returning {len(tools)} tools")
             return tools
