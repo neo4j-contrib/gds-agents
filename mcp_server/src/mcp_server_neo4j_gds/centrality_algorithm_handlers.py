@@ -3,6 +3,11 @@ from typing import Any, Dict
 
 from .algorithm_handler import AlgorithmHandler
 from .gds import projected_graph
+from .node_translator import (
+    filter_identifiers,
+    translate_ids_to_identifiers,
+    translate_identifiers_to_ids,
+)
 
 logger = logging.getLogger("mcp_server_neo4j_gds")
 
@@ -23,69 +28,19 @@ class ArticleRankHandler(AlgorithmHandler):
             source_nodes = kwargs.get("sourceNodes", None)
 
             # Handle sourceNodes - convert names to IDs if nodeIdentifierProperty is provided
-            if source_nodes is not None and node_identifier_property is not None:
-                if isinstance(source_nodes, list):
-                    # Handle list of source node names
-                    query = f"""
-                    UNWIND $names AS name
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "names": source_nodes,
-                        },
-                    )
-                    source_node_ids = df["node_id"].tolist()
-                    params["sourceNodes"] = source_node_ids
-                else:
-                    # Handle single source node name
-                    query = f"""
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower($name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "name": source_nodes,
-                        },
-                    )
-                    if not df.empty:
-                        params["sourceNodes"] = int(df["node_id"].iloc[0])
-            elif source_nodes is not None:
-                # If sourceNodes provided but no nodeIdentifierProperty, pass through as-is
-                params["sourceNodes"] = source_nodes
+            translate_identifiers_to_ids(
+                self.gds, source_nodes, "sourceNodes", node_identifier_property, params
+            )
 
             logger.info(f"ArticleRank parameters: {params}")
             article_ranks = self.gds.articleRank.stream(G, **params)
 
-        # Add node names to the results - extract the specified property
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in article_ranks["nodeId"]
-            ]
-            article_ranks["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, article_ranks)
 
-        if node_names is not None:
-            logger.info(f"Filtering ArticleRank results for nodes: {node_names}")
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            article_ranks = article_ranks[article_ranks["nodeId"].isin(node_ids)]
+        logger.info(f"Filtering ArticleRank results for nodes: {node_names}")
+        article_ranks = filter_identifiers(
+            self.gds, node_identifier_property, node_names, article_ranks
+        )
 
         return article_ranks
 
@@ -108,13 +63,9 @@ class ArticulationPointsHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in articulation_points["nodeId"]
-            ]
-            articulation_points["nodeName"] = node_name_values
-
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, articulation_points
+        )
         return articulation_points
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -136,35 +87,13 @@ class BetweennessCentralityHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in centrality["nodeId"]
-            ]
-            centrality["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, centrality)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            centrality = centrality[centrality["nodeId"].isin(node_ids)]
+        centrality = filter_identifiers(
+            self.gds, node_identifier_property, node_names, centrality
+        )
 
         return centrality
 
@@ -184,17 +113,12 @@ class BridgesHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            from_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in bridges_result["from"]
-            ]
-            to_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in bridges_result["to"]
-            ]
-            bridges_result["fromName"] = from_name_values
-            bridges_result["toName"] = to_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, bridges_result, "from", "fromName"
+        )
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, bridges_result, "to", "toName"
+        )
 
         return bridges_result
 
@@ -217,12 +141,7 @@ class CELFHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in result["nodeId"]
-            ]
-            result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, result)
 
         return result
 
@@ -248,35 +167,13 @@ class ClosenessCentralityHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in centrality["nodeId"]
-            ]
-            centrality["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, centrality)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            centrality = centrality[centrality["nodeId"].isin(node_ids)]
+        centrality = filter_identifiers(
+            self.gds, node_identifier_property, node_names, centrality
+        )
 
         return centrality
 
@@ -301,35 +198,13 @@ class DegreeCentralityHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in centrality["nodeId"]
-            ]
-            centrality["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, centrality)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            centrality = centrality[centrality["nodeId"].isin(node_ids)]
+        centrality = filter_identifiers(
+            self.gds, node_identifier_property, node_names, centrality
+        )
 
         return centrality
 
@@ -354,76 +229,22 @@ class EigenvectorCentralityHandler(AlgorithmHandler):
             source_nodes = kwargs.get("sourceNodes", None)
 
             # Handle sourceNodes - convert names to IDs if nodeIdentifierProperty is provided
-            if source_nodes is not None and node_identifier_property is not None:
-                if isinstance(source_nodes, list):
-                    # Handle list of source node names
-                    query = f"""
-                    UNWIND $names AS name
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "names": source_nodes,
-                        },
-                    )
-                    source_node_ids = df["node_id"].tolist()
-                    params["sourceNodes"] = source_node_ids
-                else:
-                    # Handle single source node name
-                    query = f"""
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower($name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "name": source_nodes,
-                        },
-                    )
-                    if not df.empty:
-                        params["sourceNodes"] = int(df["node_id"].iloc[0])
-            elif source_nodes is not None:
-                # If sourceNodes provided but no nodeIdentifierProperty, pass through as-is
-                params["sourceNodes"] = source_nodes
+            translate_identifiers_to_ids(
+                self.gds, source_nodes, "sourceNodes", node_identifier_property, params
+            )
 
             logger.info(f"Eigenvector centrality parameters: {params}")
             centrality = self.gds.eigenvector.stream(G, **params)
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in centrality["nodeId"]
-            ]
-            centrality["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, centrality)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            centrality = centrality[centrality["nodeId"].isin(node_ids)]
+        centrality = filter_identifiers(
+            self.gds, node_identifier_property, node_names, centrality
+        )
 
         return centrality
 
@@ -452,77 +273,21 @@ class PageRankHandler(AlgorithmHandler):
             source_nodes = kwargs.get("sourceNodes", None)
 
             # Handle sourceNodes - convert names to IDs if nodeIdentifierProperty is provided
-            if source_nodes is not None and node_identifier_property is not None:
-                if isinstance(source_nodes, list):
-                    # Handle list of source node names
-                    query = f"""
-                    UNWIND $names AS name
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "names": source_nodes,
-                        },
-                    )
-                    source_node_ids = df["node_id"].tolist()
-                    params["sourceNodes"] = source_node_ids
-                else:
-                    # Handle single source node name
-                    query = f"""
-                    MATCH (s)
-                    WHERE toLower(s.{node_identifier_property}) CONTAINS toLower($name)
-                    RETURN id(s) as node_id
-                    """
-                    df = self.gds.run_cypher(
-                        query,
-                        params={
-                            "name": source_nodes,
-                        },
-                    )
-                    if not df.empty:
-                        params["sourceNodes"] = int(df["node_id"].iloc[0])
-            elif source_nodes is not None:
-                # If sourceNodes provided but no nodeIdentifierProperty, pass through as-is
-                params["sourceNodes"] = source_nodes
-
+            translate_identifiers_to_ids(
+                self.gds, source_nodes, "sourceNodes", node_identifier_property, params
+            )
             logger.info(f"Pagerank parameters: {params}")
             pageranks = self.gds.pageRank.stream(G, **params)
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in pageranks["nodeId"]
-            ]
-            pageranks["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, pageranks)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            logger.info(f"Filtering pagerank results for nodes: {node_names}")
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            pageranks = pageranks[pageranks["nodeId"].isin(node_ids)]
+        pageranks = filter_identifiers(
+            self.gds, node_identifier_property, node_names, pageranks
+        )
 
         return pageranks
 
@@ -544,36 +309,13 @@ class HarmonicCentralityHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in centrality["nodeId"]
-            ]
-            centrality["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, centrality)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            centrality = centrality[centrality["nodeId"].isin(node_ids)]
-
+        centrality = filter_identifiers(
+            self.gds, node_identifier_property, node_names, centrality
+        )
         return centrality
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
@@ -596,36 +338,13 @@ class HITSHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in result["nodeId"]
-            ]
-            result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, result)
 
         # Filter results by node names if provided
         node_names = kwargs.get("nodes", None)
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(
-                query,
-                params={
-                    "names": node_names,
-                },
-            )
-            node_ids = df["node_id"].tolist()
-            result = result[result["nodeId"].isin(node_ids)]
-
+        result = filter_identifiers(
+            self.gds, node_identifier_property, node_names, result
+        )
         return result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:

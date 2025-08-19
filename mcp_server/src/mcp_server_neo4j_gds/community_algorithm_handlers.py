@@ -1,5 +1,9 @@
 import logging
 from typing import Dict, Any
+from .node_translator import (
+    filter_identifiers,
+    translate_ids_to_identifiers,
+)
 
 
 from .algorithm_handler import AlgorithmHandler
@@ -36,12 +40,7 @@ class HDBSCANHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in hdbscan_result["nodeId"]
-            ]
-            hdbscan_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, hdbscan_result)
 
         return hdbscan_result
 
@@ -59,18 +58,14 @@ class KCoreDecompositionHandler(AlgorithmHandler):
     def k_core_decomposition(self, **kwargs):
         with projected_graph(self.gds, undirected=True) as G:
             logger.info("Running K-Core Decomposition")
-            kcore_decomposition_result = self.gds.kcore.stream(G)
+            k_core_decomposition_result = self.gds.kcore.stream(G)
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in kcore_decomposition_result["nodeId"]
-            ]
-            kcore_decomposition_result["nodeName"] = node_name_values
-
-        return kcore_decomposition_result
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, k_core_decomposition_result
+        )
+        return k_core_decomposition_result
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.k_core_decomposition(
@@ -91,12 +86,9 @@ class K1ColoringHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in k1_coloring_result["nodeId"]
-            ]
-            k1_coloring_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, k1_coloring_result
+        )
 
         return k1_coloring_result
 
@@ -121,12 +113,9 @@ class KMeansClusteringHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in kmeans_clustering_result["nodeId"]
-            ]
-            kmeans_clustering_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, kmeans_clustering_result
+        )
 
         return kmeans_clustering_result
 
@@ -157,12 +146,9 @@ class LabelPropagationHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in label_propagation_result["nodeId"]
-            ]
-            label_propagation_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, label_propagation_result
+        )
 
         return label_propagation_result
 
@@ -191,12 +177,7 @@ class LeidenHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in leiden_result["nodeId"]
-            ]
-            leiden_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, leiden_result)
 
         return leiden_result
 
@@ -235,31 +216,17 @@ class LocalClusteringCoefficientHandler(AlgorithmHandler):
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
 
         # Add node names to the results if nodeIdentifierProperty is provided
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in local_clustering_coefficient_result["nodeId"]
-            ]
-            local_clustering_coefficient_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, local_clustering_coefficient_result
+        )
 
         # Filter results if nodes parameter provided
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(query, params={"names": node_names})
-            node_ids = df["node_id"].tolist()
-            local_clustering_coefficient_result = local_clustering_coefficient_result[
-                local_clustering_coefficient_result["nodeId"].isin(node_ids)
-            ]
+        local_clustering_coefficient_result = filter_identifiers(
+            self.gds,
+            node_identifier_property,
+            node_names,
+            local_clustering_coefficient_result,
+        )
 
         return local_clustering_coefficient_result
 
@@ -284,12 +251,7 @@ class LouvainHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in louvain_result["nodeId"]
-            ]
-            louvain_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(self.gds, node_identifier_property, louvain_result)
 
         return louvain_result
 
@@ -339,12 +301,9 @@ class ModularityOptimizationHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in modularity_optimization_result["nodeId"]
-            ]
-            modularity_optimization_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, modularity_optimization_result
+        )
 
         return modularity_optimization_result
 
@@ -373,12 +332,9 @@ class StronglyConnectedComponentsHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in strongly_connected_components_result["nodeId"]
-            ]
-            strongly_connected_components_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, strongly_connected_components_result
+        )
 
         return strongly_connected_components_result
 
@@ -407,31 +363,14 @@ class TriangleCountHandler(AlgorithmHandler):
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
 
         # Add node names to the results if nodeIdentifierProperty is provided
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in triangle_count_result["nodeId"]
-            ]
-            triangle_count_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, triangle_count_result
+        )
 
         # Filter results if nodes parameter provided
-        if node_names is not None:
-            if node_identifier_property is None:
-                raise ValueError(
-                    "If 'nodes' is provided, 'nodeIdentifierProperty' must also be specified."
-                )
-
-            query = f"""
-            UNWIND $names AS name
-            MATCH (s)
-            WHERE toLower(s.{node_identifier_property}) CONTAINS toLower(name)
-            RETURN id(s) as node_id
-            """
-            df = self.gds.run_cypher(query, params={"names": node_names})
-            node_ids = df["node_id"].tolist()
-            triangle_count_result = triangle_count_result[
-                triangle_count_result["nodeId"].isin(node_ids)
-            ]
+        triangle_count_result = filter_identifiers(
+            self.gds, node_identifier_property, node_names, triangle_count_result
+        )
 
         return triangle_count_result
 
@@ -456,12 +395,9 @@ class WeaklyConnectedComponentsHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in weakly_connected_components_result["nodeId"]
-            ]
-            weakly_connected_components_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, weakly_connected_components_result
+        )
 
         return weakly_connected_components_result
 
@@ -489,12 +425,9 @@ class ApproximateMaximumKCutHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in approximate_maximum_k_cut_result["nodeId"]
-            ]
-            approximate_maximum_k_cut_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds, node_identifier_property, approximate_maximum_k_cut_result
+        )
 
         return approximate_maximum_k_cut_result
 
@@ -524,12 +457,11 @@ class SpeakerListenerLabelPropagationHandler(AlgorithmHandler):
 
         # Add node names to the results if nodeIdentifierProperty is provided
         node_identifier_property = kwargs.get("nodeIdentifierProperty")
-        if node_identifier_property is not None:
-            node_name_values = [
-                self.gds.util.asNode(node_id).get(node_identifier_property)
-                for node_id in speaker_listener_label_propagation_result["nodeId"]
-            ]
-            speaker_listener_label_propagation_result["nodeName"] = node_name_values
+        translate_ids_to_identifiers(
+            self.gds,
+            node_identifier_property,
+            speaker_listener_label_propagation_result,
+        )
 
         return speaker_listener_label_propagation_result
 
