@@ -182,6 +182,10 @@ path_tool_definitions = [
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
             "required": ["sourceNode", "targetNode", "nodeIdentifierProperty"],
         },
@@ -260,6 +264,10 @@ path_tool_definitions = [
                     "type": "boolean",
                     "description": "If specified, the algorithm will try to improve the outcome via an additional post-processing heuristic.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
             "required": ["sourceNode", "targetNodes", "nodeIdentifierProperty"],
         },
@@ -305,6 +313,10 @@ path_tool_definitions = [
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 }
             },
             "required": [],
@@ -359,6 +371,10 @@ path_tool_definitions = [
                     "type": "integer",
                     "description": "The number of random walks to complete before starting training.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
             "required": [],
         },
@@ -389,6 +405,10 @@ path_tool_definitions = [
                 "maxDepth": {
                     "type": "integer",
                     "description": "The maximum distance from the source node at which nodes are visited.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": ["sourceNode", "nodeIdentifierProperty"],
@@ -421,6 +441,10 @@ path_tool_definitions = [
                     "type": "integer",
                     "description": "The maximum distance from the source node at which nodes are visited.",
                 },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
+                },
             },
             "required": ["sourceNode", "nodeIdentifierProperty"],
         },
@@ -452,6 +476,10 @@ path_tool_definitions = [
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Name of the relationship property to use as weights. If unspecified, the algorithm runs unweighted.",
+                },
+                "undirected": {
+                    "type": "boolean",
+                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": ["sourceNode", "nodeIdentifierProperty"],
