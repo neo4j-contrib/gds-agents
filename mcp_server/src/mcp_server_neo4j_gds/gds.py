@@ -57,9 +57,7 @@ def projected_graph(gds, undirected=False):
     graph_name = f"temp_graph_{uuid.uuid4().hex[:8]}"
     try:
         # Get relationship properties (non-string)
-        rel_properties = gds.run_cypher(
-            "MATCH (n)-[r]->(m) RETURN DISTINCT keys(properties(r))"
-        )["keys(properties(r))"][0]
+        rel_properties = get_relationship_properties_keys(gds)
         valid_rel_properties = {}
         for i in range(len(rel_properties)):
             pi = gds.run_cypher(
@@ -70,9 +68,7 @@ def projected_graph(gds, undirected=False):
         rel_prop_map = ", ".join(f"{prop}: r.{prop}" for prop in valid_rel_properties)
 
         # Get node properties (non-string, compatible with GDS)
-        node_properties = gds.run_cypher(
-            "MATCH (n) RETURN DISTINCT keys(properties(n))"
-        )["keys(properties(n))"][0]
+        node_properties = get_node_properties_keys(gds)
         valid_node_properties_source = {}
         valid_node_properties_target = {}
         for i in range(len(node_properties)):
@@ -83,38 +79,80 @@ def projected_graph(gds, undirected=False):
                 WHERE n.{node_properties[i]} IS NOT NULL
                 WITH n.{node_properties[i]} AS prop
                 RETURN 
-                    prop IS :: STRING AS ISSTRING,
+                    prop IS :: STRING AS IS_STRING,
+                    prop IS :: LIST<FLOAT NOT NULL> AS IS_LIST_FLOAT,
+                    prop IS :: LIST<INTEGER NOT NULL> AS IS_LIST_INTEGER,
                     CASE 
                         WHEN prop IS :: STRING THEN null
+                        WHEN prop IS :: LIST<FLOAT NOT NULL> THEN null
+                        WHEN prop IS :: LIST<INTEGER NOT NULL> THEN null
                         ELSE prop % 1 = 0 
-                    END AS IS_WHOLE_NUMBER
+                    END AS IS_WHOLE_NUMBER,
+                    CASE 
+                        WHEN prop IS :: STRING THEN null
+                        WHEN prop IS :: LIST<FLOAT NOT NULL> THEN null
+                        WHEN prop IS :: LIST<INTEGER NOT NULL> THEN null
+                        ELSE prop % 1 <> 0 
+                    END AS IS_DECIMAL
                 LIMIT 10
                 """
             )
 
             if not type_check.empty:
                 # Check if any value is a string - if so, skip this property
-                has_strings = any(type_check["ISSTRING"])
-
+                has_strings = any(type_check["IS_STRING"])
                 if not has_strings:
-                    # All values are numeric, check if all are whole numbers
-                    whole_numbers = type_check["IS_WHOLE_NUMBER"].dropna()
-                    if len(whole_numbers) > 0 and all(whole_numbers):
-                        # All values are whole numbers - use as integer
-                        valid_node_properties_source[node_properties[i]] = (
-                            f"n.{node_properties[i]}"
-                        )
-                        valid_node_properties_target[node_properties[i]] = (
-                            f"m.{node_properties[i]}"
-                        )
-                    else:
-                        # Has decimal values - use as float
-                        valid_node_properties_source[node_properties[i]] = (
-                            f"toFloat(n.{node_properties[i]})"
-                        )
-                        valid_node_properties_target[node_properties[i]] = (
-                            f"toFloat(m.{node_properties[i]})"
-                        )
+                    all_numbers = (
+                        type_check[["IS_WHOLE_NUMBER", "IS_DECIMAL"]]
+                        .notna()
+                        .any(axis=1)
+                        .sum()
+                        .item()
+                    )
+                    all_lists = (
+                        type_check[["IS_LIST_FLOAT", "IS_LIST_INTEGER"]]
+                        .any(axis=1)
+                        .notna()
+                        .sum()
+                        .item()
+                    )
+                    if all_numbers == len(type_check):
+                        # All values are numeric, check if all are whole numbers
+                        whole_numbers = type_check["IS_WHOLE_NUMBER"].dropna()
+                        if len(whole_numbers) > 0 and all(whole_numbers):
+                            # All values are whole numbers - use as integer
+                            valid_node_properties_source[node_properties[i]] = (
+                                f"n.{node_properties[i]}"
+                            )
+                            valid_node_properties_target[node_properties[i]] = (
+                                f"m.{node_properties[i]}"
+                            )
+                        else:
+                            # Has decimal values - use as float
+                            valid_node_properties_source[node_properties[i]] = (
+                                f"toFloat(n.{node_properties[i]})"
+                            )
+                            valid_node_properties_target[node_properties[i]] = (
+                                f"toFloat(m.{node_properties[i]})"
+                            )
+                    elif all_lists == len(type_check):
+                        whole_numbers = type_check["IS_LIST_INTEGER"].dropna()
+                        if len(whole_numbers) > 0 and all(whole_numbers):
+                            # All values are  list of ints
+                            valid_node_properties_source[node_properties[i]] = (
+                                f"n.{node_properties[i]}"
+                            )
+                            valid_node_properties_target[node_properties[i]] = (
+                                f"m.{node_properties[i]}"
+                            )
+                        else:
+                            # Has at least an array of floats[]  - use as float list
+                            valid_node_properties_source[node_properties[i]] = (
+                                f"toFloatList(n.{node_properties[i]})"
+                            )
+                            valid_node_properties_target[node_properties[i]] = (
+                                f"toFloatList(m.{node_properties[i]})"
+                            )
 
         node_prop_map_source = ", ".join(
             f"{prop}: {expr}" for prop, expr in valid_node_properties_source.items()
@@ -201,24 +239,22 @@ def count_nodes(gds: GraphDataScience):
 
 
 def get_node_properties_keys(gds: GraphDataScience):
-    with projected_graph(gds):
-        query = """
+    query = """
         MATCH (n)
         RETURN DISTINCT keys(properties(n)) AS properties_keys
         """
-        df = gds.run_cypher(query)
-        if df.empty:
-            return []
-        return df["properties_keys"].iloc[0]
+    df = gds.run_cypher(query)
+    if df.empty:
+        return []
+    return df["properties_keys"].iloc[0]
 
 
 def get_relationship_properties_keys(gds: GraphDataScience):
-    with projected_graph(gds):
-        query = """
+    query = """
         MATCH (n)-[r]->(m)
         RETURN DISTINCT keys(properties(r)) AS properties_keys
         """
-        df = gds.run_cypher(query)
-        if df.empty:
-            return []
-        return df["properties_keys"].iloc[0]
+    df = gds.run_cypher(query)
+    if df.empty:
+        return []
+    return df["properties_keys"].iloc[0]
