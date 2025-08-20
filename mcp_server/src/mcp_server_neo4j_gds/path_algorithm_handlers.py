@@ -10,7 +10,12 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 class DijkstraShortestPathHandler(AlgorithmHandler):
     def find_shortest_path(
-        self, start_node: str, end_node: str, node_identifier_property: str, **kwargs
+        self,
+        start_node: str,
+        end_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (start)
@@ -30,7 +35,7 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
         start_node_id = int(df["start_id"].iloc[0])
         end_node_id = int(df["end_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             args = locals()
             params = {k: v for k, v in kwargs.items() if v is not None}
@@ -72,13 +77,18 @@ class DijkstraShortestPathHandler(AlgorithmHandler):
             arguments.get("start_node"),
             arguments.get("end_node"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationship_property"),
         )
 
 
 class DeltaSteppingShortestPathHandler(AlgorithmHandler):
     def delta_stepping_shortest_path(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (source)
@@ -93,7 +103,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df["source_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Delta-Stepping shortest path parameters: {params}")
@@ -153,6 +163,7 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
         return self.delta_stepping_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             delta=arguments.get("delta"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
@@ -160,7 +171,11 @@ class DeltaSteppingShortestPathHandler(AlgorithmHandler):
 
 class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
     def dijkstra_single_source_shortest_path(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         query = f"""
         MATCH (source)
@@ -175,7 +190,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(df["source_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Dijkstra single-source shortest path parameters: {params}")
@@ -234,6 +249,7 @@ class DijkstraSingleSourceShortestPathHandler(AlgorithmHandler):
         return self.dijkstra_single_source_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
@@ -244,6 +260,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         source_node: str,
         target_node: str,
         node_identifier_property: str,
+        undirected: bool = False,
         **kwargs,
     ):
         query = f"""
@@ -264,7 +281,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
         source_node_id = int(df["source_id"].iloc[0])
         target_node_id = int(df["target_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"A* shortest path parameters: {params}")
@@ -305,6 +322,7 @@ class AStarShortestPathHandler(AlgorithmHandler):
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             latitudeProperty=arguments.get("latitudeProperty"),
             longitudeProperty=arguments.get("longitudeProperty"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
@@ -317,6 +335,7 @@ class YensShortestPathsHandler(AlgorithmHandler):
         source_node: str,
         target_node: str,
         node_identifier_property: str,
+        undirected: bool = False,
         **kwargs,
     ):
         query = f"""
@@ -337,7 +356,7 @@ class YensShortestPathsHandler(AlgorithmHandler):
         source_node_id = int(df["source_id"].iloc[0])
         target_node_id = int(df["target_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Yen's shortest paths parameters: {params}")
@@ -394,6 +413,7 @@ class YensShortestPathsHandler(AlgorithmHandler):
             arguments.get("sourceNode"),
             arguments.get("targetNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             k=arguments.get("k"),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
@@ -481,6 +501,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
         source_node: str,
         target_nodes: list,
         node_identifier_property: str,
+        undirected: bool = False,
         **kwargs,
     ):
         # Find source node ID
@@ -531,7 +552,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
         if not target_node_ids:
             return {"found": False, "message": "No target nodes found"}
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"Minimum Directed Steiner Tree parameters: {params}")
@@ -587,6 +608,7 @@ class MinimumDirectedSteinerTreeHandler(AlgorithmHandler):
             arguments.get("sourceNode"),
             arguments.get("targetNodes"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
             delta=arguments.get("delta"),
             applyRerouting=arguments.get("applyRerouting"),
@@ -652,8 +674,8 @@ class PrizeCollectingSteinerTreeHandler(AlgorithmHandler):
 
 
 class AllPairsShortestPathsHandler(AlgorithmHandler):
-    def all_pairs_shortest_paths(self, **kwargs):
-        with projected_graph(self.gds) as G:
+    def all_pairs_shortest_paths(self, undirected: bool = False, **kwargs):
+        with projected_graph(self.gds, undirected=undirected) as G:
             # If any optional parameter is not None, use that parameter
             params = {k: v for k, v in kwargs.items() if v is not None}
             logger.info(f"All Pairs Shortest Paths parameters: {params}")
@@ -693,12 +715,13 @@ class AllPairsShortestPathsHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.all_pairs_shortest_paths(
-            relationshipWeightProperty=arguments.get("relationshipWeightProperty")
+            undirected=arguments.get("undirected", False),
+            relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
 
 class RandomWalkHandler(AlgorithmHandler):
-    def random_walk(self, **kwargs):
+    def random_walk(self, undirected: bool = False, **kwargs):
         # Process source nodes if provided
         source_node_ids = []
         if "sourceNodes" in kwargs and kwargs["sourceNodes"]:
@@ -723,7 +746,7 @@ class RandomWalkHandler(AlgorithmHandler):
                 if not source_df.empty:
                     source_node_ids.append(int(source_df["source_id"].iloc[0]))
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # Prepare parameters for the random walk algorithm, excluding our internal parameters
             params = {
                 k: v
@@ -770,6 +793,7 @@ class RandomWalkHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.random_walk(
+            undirected=arguments.get("undirected", False),
             sourceNodes=arguments.get("sourceNodes"),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             walkLength=arguments.get("walkLength"),
@@ -783,7 +807,11 @@ class RandomWalkHandler(AlgorithmHandler):
 
 class BreadthFirstSearchHandler(AlgorithmHandler):
     def breadth_first_search(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""
@@ -818,7 +846,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
                 if not target_df.empty:
                     target_node_ids.append(int(target_df["target_id"].iloc[0]))
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # Prepare parameters for the BFS algorithm, excluding our internal parameters
             params = {
                 k: v
@@ -873,6 +901,7 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
         return self.breadth_first_search(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth"),
         )
@@ -880,7 +909,11 @@ class BreadthFirstSearchHandler(AlgorithmHandler):
 
 class DepthFirstSearchHandler(AlgorithmHandler):
     def depth_first_search(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""
@@ -915,7 +948,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
                 if not target_df.empty:
                     target_node_ids.append(int(target_df["target_id"].iloc[0]))
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # Prepare parameters for the DFS algorithm, excluding our internal parameters
             params = {
                 k: v
@@ -970,6 +1003,7 @@ class DepthFirstSearchHandler(AlgorithmHandler):
         return self.depth_first_search(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             targetNodes=arguments.get("targetNodes"),
             maxDepth=arguments.get("maxDepth"),
         )
@@ -977,7 +1011,11 @@ class DepthFirstSearchHandler(AlgorithmHandler):
 
 class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
     def bellman_ford_single_source_shortest_path(
-        self, source_node: str, node_identifier_property: str, **kwargs
+        self,
+        source_node: str,
+        node_identifier_property: str,
+        undirected: bool = False,
+        **kwargs,
     ):
         # Find source node ID
         source_query = f"""
@@ -995,7 +1033,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
 
         source_node_id = int(source_df["source_id"].iloc[0])
 
-        with projected_graph(self.gds) as G:
+        with projected_graph(self.gds, undirected=undirected) as G:
             # Prepare parameters for the Bellman-Ford algorithm, excluding our internal parameters
             params = {
                 k: v
@@ -1060,6 +1098,7 @@ class BellmanFordSingleSourceShortestPathHandler(AlgorithmHandler):
         return self.bellman_ford_single_source_shortest_path(
             arguments.get("sourceNode"),
             arguments.get("nodeIdentifierProperty"),
+            undirected=arguments.get("undirected", False),
             relationshipWeightProperty=arguments.get("relationshipWeightProperty"),
         )
 
