@@ -1,8 +1,12 @@
 import os
 from neo4j import GraphDatabase
 import json
+import argparse
+from dotenv import load_dotenv
+import os
 
-def import_tube_data(uri, username, password, data_file):
+
+def import_tube_data(uri, username, password, data_file, undirected=False):
     driver = GraphDatabase.driver(uri, auth=(username, password))
     
     # Load JSON data
@@ -37,27 +41,55 @@ def import_tube_data(uri, username, password, data_file):
             s.rail = toInteger(station.rail)
         """, {'stations': data['stations']})
         
-        session.run("""
-        UNWIND $connections AS conn
-        MATCH (s1:UndergroundStation {id: conn.station1})
-        MATCH (s2:UndergroundStation {id: conn.station2})
-        MERGE (s1)-[r:LINK {
-            line: conn.line,
-            time: toInteger(conn.time),
-            distance: toInteger(conn.time)
-        }]->(s2)
-        """, {'connections': data['connections']})
+        if undirected:
+            # Create bidirectional relationships for undirected graph
+            session.run("""
+            UNWIND $connections AS conn
+            MATCH (s1:UndergroundStation {id: conn.station1})
+            MATCH (s2:UndergroundStation {id: conn.station2})
+            MERGE (s1)-[r1:LINK {
+                line: conn.line,
+                time: toInteger(conn.time),
+                distance: toInteger(conn.time)
+            }]->(s2)
+            MERGE (s2)-[r2:LINK {
+                line: conn.line,
+                time: toInteger(conn.time),
+                distance: toInteger(conn.time)
+            }]->(s1)
+            """, {'connections': data['connections']})
+        else:
+            # Create directed relationships (default behavior)
+            session.run("""
+            UNWIND $connections AS conn
+            MATCH (s1:UndergroundStation {id: conn.station1})
+            MATCH (s2:UndergroundStation {id: conn.station2})
+            MERGE (s1)-[r:LINK {
+                line: conn.line,
+                time: toInteger(conn.time),
+                distance: toInteger(conn.time)
+            }]->(s2)
+            """, {'connections': data['connections']})
     
     driver.close()
 
-# Usage
-from dotenv import load_dotenv
-import os
-load_dotenv('.env')
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Import London Underground data into Neo4j')
+    parser.add_argument('--undirected', action='store_true', 
+                       help='Load the graph as undirected (creates bidirectional relationships)')
+    args = parser.parse_args()
+    
+    load_dotenv('.env')
+    
+    uri = os.environ["NEO4J_URI"]
+    username = os.environ["NEO4J_USERNAME"]
+    password = os.environ["NEO4J_PASSWORD"]
+    data_file = "dataset/london.json"
+    
+    print(f"Loading graph as {'undirected' if args.undirected else 'directed'}...")
+    import_tube_data(uri, username, password, data_file, undirected=args.undirected)
+    print("Import completed successfully!")
 
-uri = os.environ["NEO4J_URI"]
-username = os.environ["NEO4J_USERNAME"]
-password = os.environ["NEO4J_PASSWORD"]
-data_file = "dataset/london.json"
-
-import_tube_data(uri, username, password, data_file)
+if __name__ == "__main__":
+    main()
