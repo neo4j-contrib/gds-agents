@@ -64,10 +64,6 @@ similarity_tool_definitions = [
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
         },
     ),

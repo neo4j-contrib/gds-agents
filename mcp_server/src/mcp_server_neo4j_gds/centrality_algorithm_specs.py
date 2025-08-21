@@ -60,10 +60,6 @@ centrality_tool_definitions = [
                     "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
                     "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}.",
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
             "required": [],
         },
@@ -104,10 +100,6 @@ centrality_tool_definitions = [
                 "relationshipWeightProperty": {
                     "type": "string",
                     "description": "Property of the relationship to use for weighting. If not specified, all relationships are treated equally.",
-                },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": [],
@@ -150,10 +142,6 @@ centrality_tool_definitions = [
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
             "required": ["seedSetSize"],
         },
@@ -179,10 +167,6 @@ centrality_tool_definitions = [
                     "type": "boolean",
                     "description": "If true, uses the Wasserman-Faust formula for closeness centrality. ",
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
             "required": [],
         },
@@ -205,10 +189,6 @@ centrality_tool_definitions = [
                 "orientation": {
                     "type": "string",
                     "description": "The orientation used to compute node degrees. Supported orientations are NATURAL (for out-degree), REVERSE (for in-degree) and UNDIRECTED (for both in-degree and out-degree) ",
-                },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": [],
@@ -276,10 +256,6 @@ centrality_tool_definitions = [
                     "Supported values are None, MinMax, Max, Mean, Log, and StdScore. "
                     "To apply scaler-specific configuration, use the Map syntax: {scaler: 'name', ...}.",
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
         },
     ),
@@ -331,10 +307,6 @@ centrality_tool_definitions = [
                         },
                     ],
                 },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
-                },
             },
             "required": [],
         },
@@ -354,10 +326,6 @@ centrality_tool_definitions = [
                 "nodeIdentifierProperty": {
                     "type": "string",
                     "description": "Property name to use for identifying nodes (e.g., 'name', 'Name', 'title'). Use get_node_properties_keys to find available properties.",
-                },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": [],
@@ -396,10 +364,6 @@ centrality_tool_definitions = [
                     "type": "string",
                     "enum": ["AUTO", "RANGE", "DEGREE"],
                     "description": "The partitioning scheme used to divide the work between threads. Available options are AUTO, RANGE, DEGREE.",
-                },
-                "undirected": {
-                    "type": "boolean",
-                    "description": "Whether to treat the graph as undirected or not. Default is false (directed).",
                 },
             },
             "required": [],
