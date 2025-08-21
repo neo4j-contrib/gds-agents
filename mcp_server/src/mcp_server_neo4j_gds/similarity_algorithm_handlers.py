@@ -12,8 +12,8 @@ logger = logging.getLogger("mcp_server_neo4j_gds")
 
 
 class NodeSimilarityHandler(AlgorithmHandler):
-    def node_similarity(self, undirected: bool = False, **kwargs):
-        with projected_graph(self.gds, undirected=undirected) as G:
+    def node_similarity(self, **kwargs):
+        with projected_graph(self.gds) as G:
             params = {
                 k: v
                 for k, v in kwargs.items()
@@ -67,7 +67,6 @@ class NodeSimilarityHandler(AlgorithmHandler):
 
     def execute(self, arguments: Dict[str, Any]) -> Any:
         return self.node_similarity(
-            undirected=arguments.get("undirected", False),
             nodeIdentifierProperty=arguments.get("nodeIdentifierProperty"),
             sourceNodeFilter=arguments.get("sourceNodeFilter"),
             targetNodeFilter=arguments.get("targetNodeFilter"),
